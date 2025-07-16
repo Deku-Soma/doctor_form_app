@@ -5,6 +5,8 @@ from pages.home_page import HomePage
 from pages.formA import FormA
 from pages.formB import FormB
 import sys
+import os 
+import json
 
 class MainApp(QStackedWidget):
     def __init__(self):
@@ -12,25 +14,38 @@ class MainApp(QStackedWidget):
 
         self.login_page = LoginPage(self)
         self.home_page = HomePage(self)
-        self.feature_page1 = FormA(self)
-        self.feature_page2 = FormB(self)
+        self.formA = FormA(self)
+        self.formB = FormB(self)
 
         self.addWidget(self.login_page)
         self.addWidget(self.home_page)
-        self.addWidget(self.feature_page1)
-        self.addWidget(self.feature_page2)
+        self.addWidget(self.formA)
+        self.addWidget(self.formB)
 
-        self.setCurrentWidget(self.login_page)
-
-    def go_to_home(self, user_data=None):
-        self.home_page.set_user(user_data)
         self.setCurrentWidget(self.home_page)
 
-    def go_to_page(self, page_name,user_details):
-        if page_name == "feature1":
-            self.setCurrentWidget(self.feature_page1)
-        elif page_name == "feature2":
-            self.setCurrentWidget(self.feature_page2)
+    def go_to_home(self):
+        self.home_page.set_user()
+        self.setCurrentWidget(self.home_page)
+
+    def go_to_page(self, page_name):
+        if page_name == "FormA":
+            self.setCurrentWidget(self.formA)
+        elif page_name == "FormB":
+            self.setCurrentWidget(self.formB)
+    
+    def fetch_session(self):
+        cwd = os.getcwd()
+        path = os.path.join(cwd,'Sessions')
+        file = os.path.join(path,'session.json')
+        try:
+            with open(file, 'r') as f:
+                data = json.load(f)
+                return data['user']
+        except (FileNotFoundError, json.JSONDecodeError):
+            return None
+
+
 
 
 

@@ -30,7 +30,6 @@ def validate_login(email: str, password: str) -> dict:
         return {"success": False, "message": "Email not found"}
 
     user = result.data[0]
-    print(user)
     if bcrypt.checkpw(password.encode(), user["user_password"].encode()):
         return {"success": True, "user": user}
     else:

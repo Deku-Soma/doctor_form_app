@@ -5,6 +5,9 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import db
+import os 
+import json 
+import time
 
 
 class LoginPage(QWidget):
@@ -150,7 +153,8 @@ class LoginPage(QWidget):
         result = db.validate_login(email=email,password=password)
         if result['success']:
             QMessageBox.information(self, "Login", f"Logged in with email: {email}")
-            self.main_window.go_to_home(result)
+            self.session_creation(result)
+            self.main_window.go_to_home()
 
         else:
             QMessageBox.information(self, "Login", f"Failed to Login.\n Password or email is incorrect")
@@ -168,5 +172,15 @@ class LoginPage(QWidget):
         #TODO: how to handel errors  
         QMessageBox.information(self, "Sign Up", f"Account created for {username}!")
         self.show_login()
+    
+    def session_creation(self, user_data):
+        user = user_data
+        cwd =  os.getcwd()
+        file_path = os.path.join(cwd,'Sessions')
+        file_name = os.path.join(file_path,'session.json')
+        with open(file_name,'w') as f:
+            json.dump(user,f)
+
+
 
 
