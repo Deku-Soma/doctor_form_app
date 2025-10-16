@@ -21,12 +21,12 @@ QWidget#FormRoot {
 
 /* ---------- Labels ---------- */
 QLabel[role="title"] {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 80px;
+  font-weight: 1000;
   margin: 8px 0 2px 0;
 }
 QLabel[role="description"] {
-  color: #A8B0BF;
+  color: #080d14;
   line-height: 1.3;
   margin-bottom: 8px;
 }
@@ -37,14 +37,14 @@ QLabel[role="field-label"] {
 
 /* ---------- Inputs ---------- */
 QLineEdit, QTextEdit, QDateEdit {
-  background: #0D0F14;
-  border: 1px solid #2E3440;
+  background: #dde1ed;
+  border: 1px solid #b3c4e6;
   border-radius: 10px;
   padding: 8px 10px;
 }
 QTextEdit { padding: 10px; min-height: 90px; }
 QLineEdit:focus, QTextEdit:focus, QDateEdit:focus {
-  border: 1px solid #5B9CFF;
+  border: 1px solid #080d14;
   outline: none;
 }
 QLineEdit[state="error"], QTextEdit[state="error"], QDateEdit[state="error"] {
