@@ -37,8 +37,8 @@ class HomePage(QWidget):
         btn_form_b.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         btn_logout.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        btn_form_a.clicked.connect(lambda: self.main_window.go_to_page("FormA"))
-        btn_form_b.clicked.connect(lambda: self.main_window.go_to_page("FormB"))
+        btn_form_a.clicked.connect(lambda: self.main_window.go_to_form("FormA"))
+        btn_form_b.clicked.connect(lambda: self.main_window.go_to_form("FormB"))
         btn_logout.clicked.connect(self.logout)
 
         menu_layout.addWidget(btn_form_a)
