@@ -22,7 +22,7 @@ class MainApp(QStackedWidget):
         self.addWidget(self.formA)
         self.addWidget(self.formB)
 
-        self.setCurrentWidget(self.home_page)
+        self.setCurrentWidget(self.formA)
 
     def go_to_home(self):
         self.home_page.set_user()

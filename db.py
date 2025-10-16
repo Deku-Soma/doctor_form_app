@@ -2,7 +2,8 @@ from dotenv import load_dotenv
 import os 
 from supabase import create_client
 import bcrypt
-
+import base64
+import sqlite3
 
 load_dotenv(dotenv_path=".env")  # Optional: give full path if needed
 
@@ -34,3 +35,10 @@ def validate_login(email: str, password: str) -> dict:
         return {"success": True, "user": user}
     else:
         return {"success": False, "message": "Incorrect password"}
+    
+
+
+def encode_signature_to_base64(signature_path):
+    with open(signature_path, "rb") as image_file:
+        encoded = base64.b64encode(image_file.read()).decode("utf-8")
+        return encoded
