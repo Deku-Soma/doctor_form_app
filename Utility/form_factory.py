@@ -2,25 +2,31 @@ from PyQt5.QtWidgets import (
     QWidget, QLabel, QLineEdit, QTextEdit, QPushButton,
     QVBoxLayout, QFormLayout, QScrollArea, QDateEdit, QMessageBox
 )
-from PyQt5.QtCore import QDate
-from typing import Callable, Dict, Any, Optional, List
+from PyQt5.QtCore import QDate, Qt
+from typing import Callable, Dict, Any, Optional, List, Tuple, Union
 import tempfile, os
+
 from pages.signiture import SignaturePad
 from pages.template_generator import generate_html_pdf
 
 
-class FormWidget(QWidget):
+class FormFactory(QWidget):
     """
-    Generic form widget built from a schema. 
-    Exposes: get_data(), validate(), and plumbing for Submit/Generate PDF/Back.
+    Generic, style-aware form widget built from a schema.
+    Exposes: get_data(), validate(), on_submit(), on_generate_pdf(), on_back()
     """
     def __init__(
         self,
         main_window,
         schema: Dict[str, Any],
-        pdf_generator: Optional[Callable[[Dict[str, Any], Optional[str], str], None]] = None
+        pdf_generator: Optional[Callable[[Dict[str, Any], Optional[str], str], None]] = None,
+        initial_data: Optional[Dict[str, Any]] = None,   # <-- NEW
     ):
         super().__init__()
+        self.setObjectName("FormRoot")  # QSS target
+        if "class" in schema:  # optional per-form class (for QSS varianting)
+            self.setProperty("form-class", schema["class"])
+
         self.main_window = main_window
         self.schema = schema
         self.pdf_generator = pdf_generator or generate_html_pdf
@@ -29,17 +35,35 @@ class FormWidget(QWidget):
         self.signature_names: List[str] = []  # track signature fields
         self._build_ui()
 
+        # Optional per-schema subtree QSS override
+        extra_qss = self.schema.get("extra_qss")
+        if extra_qss:
+            self.setStyleSheet(extra_qss)
+        
+        # Apply prefill if provided
+        if initial_data:
+            self.set_data(initial_data) 
+
     # ---------- UI BUILD ----------
     def _build_ui(self):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        scroll.setObjectName("FormScroll")
+
         container = QWidget()
+        container.setObjectName("FormContainer")
+
         self.form_layout = QFormLayout()
+        self.form_layout.setVerticalSpacing(8)
+        self.form_layout.setHorizontalSpacing(12)
+        container.setContentsMargins(16, 16, 16, 16)
 
         # Optional title
         title = self.schema.get("title")
         if title:
-            title_label = QLabel(f"<h2 style='margin-bottom:6px'>{title}</h2>")
+            title_label = QLabel(title)
+            title_label.setProperty("role", "title")
+            title_label.setTextFormat(Qt.RichText)
             self.form_layout.addRow(title_label)
 
         # Optional description
@@ -47,6 +71,7 @@ class FormWidget(QWidget):
         if desc:
             desc_label = QLabel(desc)
             desc_label.setWordWrap(True)
+            desc_label.setProperty("role", "description")
             self.form_layout.addRow(desc_label)
 
         # Fields
@@ -54,35 +79,90 @@ class FormWidget(QWidget):
             self._add_field(field)
 
         # Actions (buttons)
+        # Can be ["submit", "generate_pdf", "back"] or list of dicts:
+        # {"type": "...", "text": "...", "variant": "primary|secondary|danger"}
         actions = self.schema.get("actions", ["submit", "generate_pdf", "back"])
-        button_row = QWidget()
-        button_row_layout = QVBoxLayout()
-        button_row_layout.setContentsMargins(0, 12, 0, 0)
+        btn_container = QWidget()
+        btn_container.setObjectName("ActionBar")
+        btn_layout = QVBoxLayout()
+        btn_layout.setContentsMargins(0, 12, 0, 0)
+        btn_layout.setSpacing(8)
 
-        if "submit" in actions:
-            submit_btn = QPushButton(self.schema.get("submit_text", "Submit"))
-            submit_btn.clicked.connect(self.on_submit)
-            button_row_layout.addWidget(submit_btn)
+        for kind, text, variant in self._normalize_actions(actions):
+            btn = QPushButton(text)
+            if variant:
+                btn.setProperty("variant", variant)
+            else:
+                # sensible defaults
+                if kind == "submit":
+                    btn.setProperty("variant", "primary")
+                else:
+                    btn.setProperty("variant", "secondary")
 
-        if "generate_pdf" in actions:
-            pdf_btn = QPushButton(self.schema.get("pdf_text", "Generate PDF"))
-            pdf_btn.clicked.connect(self.on_generate_pdf)
-            button_row_layout.addWidget(pdf_btn)
+            if kind == "submit":
+                btn.clicked.connect(self.on_submit)
+            elif kind == "generate_pdf":
+                btn.clicked.connect(self.on_generate_pdf)
+            elif kind == "back":
+                btn.clicked.connect(self.on_back)
+            else:
+                continue
 
-        if "back" in actions:
-            back_btn = QPushButton(self.schema.get("back_text", "Back"))
-            back_btn.clicked.connect(self.on_back)
-            button_row_layout.addWidget(back_btn)
+            btn_layout.addWidget(btn)
 
-        button_row.setLayout(button_row_layout)
-        self.form_layout.addRow(button_row)
+        btn_container.setLayout(btn_layout)
+        self.form_layout.addRow(btn_container)
 
         # Wrap
         container.setLayout(self.form_layout)
         scroll.setWidget(container)
-        layout = QVBoxLayout()
-        layout.addWidget(scroll)
-        self.setLayout(layout)
+
+        outer = QVBoxLayout()
+        outer.setContentsMargins(12, 12, 12, 12)
+        outer.setSpacing(10)
+        outer.addWidget(scroll)
+        self.setLayout(outer)
+
+    def _normalize_actions(self, actions: List[Any]) -> List[Tuple[str, str, Optional[str]]]:
+        """
+        Normalize actions into (kind, text, variant) tuples.
+        """
+        out: List[Tuple[str, str, Optional[str]]] = []
+        for a in actions:
+            if isinstance(a, str):
+                if a == "submit":
+                    out.append(("submit", self.schema.get("submit_text", "Submit"), None))
+                elif a == "generate_pdf":
+                    out.append(("generate_pdf", self.schema.get("pdf_text", "Generate PDF"), None))
+                elif a == "back":
+                    out.append(("back", self.schema.get("back_text", "Back"), None))
+            elif isinstance(a, dict):
+                kind = a.get("type")
+                if kind not in {"submit", "generate_pdf", "back"}:
+                    continue
+                text = a.get("text") or \
+                    (self.schema.get("submit_text", "Submit") if kind == "submit" else
+                     self.schema.get("pdf_text", "Generate PDF") if kind == "generate_pdf" else
+                     self.schema.get("back_text", "Back"))
+                out.append((kind, text, a.get("variant")))
+        return out
+    
+    ## ------------Helper prefill data 
+    def _to_qdate(self, value: Union[str, QDate]) -> Optional[QDate]:
+        if isinstance(value, QDate):
+            return value if value.isValid() else None
+        if isinstance(value, str):
+            # common formats; add more if you need
+            for fmt in ("yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy"):
+                qd = QDate.fromString(value, fmt)
+                if qd.isValid():
+                    return qd
+        return None
+
+    def _make_field_label(self, text: str, required: bool = False) -> QLabel:
+        lbl = QLabel(f"{text}{' *' if required else ''}:")
+        lbl.setProperty("role", "field-label")
+        return lbl
 
     def _add_field(self, field: Dict[str, Any]):
         """
@@ -97,22 +177,20 @@ class FormWidget(QWidget):
         f_type = field.get("type", "text")
         name = field["name"]
         label = field.get("label", name)
+        required = bool(field.get("required"))
 
+        # Build widget
         if f_type == "text":
             w = QLineEdit()
             if "placeholder" in field:
                 w.setPlaceholderText(field["placeholder"])
             if "default" in field and isinstance(field["default"], str):
                 w.setText(field["default"])
-            self.widgets[name] = w
-            self.form_layout.addRow(label + ":", w)
 
         elif f_type == "textarea":
             w = QTextEdit()
             if "default" in field and isinstance(field["default"], str):
                 w.setPlainText(field["default"])
-            self.widgets[name] = w
-            self.form_layout.addRow(label + ":", w)
 
         elif f_type == "date":
             w = QDateEdit()
@@ -121,28 +199,35 @@ class FormWidget(QWidget):
             if default == "today":
                 w.setDate(QDate.currentDate())
             elif isinstance(default, str):
-                # Expect 'yyyy-MM-dd' if string provided
                 qd = QDate.fromString(default, "yyyy-MM-dd")
                 w.setDate(qd if qd.isValid() else QDate.currentDate())
-            self.widgets[name] = w
-            self.form_layout.addRow(label + ":", w)
 
         elif f_type == "signature":
             pad = SignaturePad()
+            pad.setProperty("role", "signature")
             self.widgets[name] = pad
             self.signature_names.append(name)
-            self.form_layout.addRow(label + ":", pad)
+
+            # Label + signature pad
+            self.form_layout.addRow(self._make_field_label(label, required), pad)
 
             # Optional clear button just for signatures
             clear_sig_btn = QPushButton(f"Clear {label}")
+            clear_sig_btn.setProperty("variant", "secondary")
             clear_sig_btn.clicked.connect(pad.clear)
             self.form_layout.addRow(clear_sig_btn)
+            return  # signature handled, exit early
 
         else:
             # Unknown type -> text fallback
             w = QLineEdit()
-            self.widgets[name] = w
-            self.form_layout.addRow(label + ":", w)
+
+        # Tag input for QSS states
+        if isinstance(w, (QLineEdit, QTextEdit, QDateEdit)):
+            w.setProperty("state", "")  # default state (no error)
+
+        self.widgets[name] = w
+        self.form_layout.addRow(self._make_field_label(label, required), w)
 
     # ---------- DATA / VALIDATION ----------
     def get_data(self) -> Dict[str, Any]:
@@ -150,8 +235,8 @@ class FormWidget(QWidget):
         for field in self.schema.get("fields", []):
             name = field["name"]
             w = self.widgets[name]
-
             f_type = field.get("type", "text")
+
             if f_type == "text":
                 data[name] = w.text()
             elif f_type == "textarea":
@@ -159,14 +244,29 @@ class FormWidget(QWidget):
             elif f_type == "date":
                 data[name] = w.date().toString("yyyy-MM-dd")
             elif f_type == "signature":
-                # handled separately by save_signature_images()
                 data[name] = "<signature>"
             else:
                 data[name] = getattr(w, "text", lambda: "")()
         return data
 
+    def _mark_error(self, widget: QWidget, is_error: bool):
+        """
+        Toggle an 'error' visual state on inputs via dynamic properties.
+        """
+        widget.setProperty("state", "error" if is_error else "")
+        widget.style().unpolish(widget)
+        widget.style().polish(widget)
+        widget.update()
+
     def validate(self) -> bool:
         missing_labels = []
+        # Clear previous error states
+        for field in self.schema.get("fields", []):
+            name = field["name"]
+            w = self.widgets[name]
+            if isinstance(w, (QLineEdit, QTextEdit, QDateEdit)):
+                self._mark_error(w, False)
+
         for field in self.schema.get("fields", []):
             if not field.get("required"):
                 continue
@@ -174,21 +274,22 @@ class FormWidget(QWidget):
             label = field.get("label", name)
             w = self.widgets[name]
             f_type = field.get("type", "text")
+            is_missing = False
 
             if f_type in ("text",):
-                if not w.text().strip():
-                    missing_labels.append(label)
+                is_missing = not w.text().strip()
             elif f_type == "textarea":
-                if not w.toPlainText().strip():
-                    missing_labels.append(label)
+                is_missing = not w.toPlainText().strip()
             elif f_type == "date":
-                if not w.date().isValid():
-                    missing_labels.append(label)
+                is_missing = not w.date().isValid()
             elif f_type == "signature":
-                # very light check: does it have any strokes? (depends on your SignaturePad impl)
-                # If not available, skip or implement a `has_content()` method in SignaturePad.
-                if hasattr(w, "isEmpty") and w.isEmpty():
-                    missing_labels.append(label)
+                if hasattr(w, "isEmpty"):
+                    is_missing = w.isEmpty()
+
+            if is_missing:
+                missing_labels.append(label)
+                if isinstance(w, (QLineEdit, QTextEdit, QDateEdit)):
+                    self._mark_error(w, True)
 
         if missing_labels:
             QMessageBox.warning(self, "Missing required fields",
@@ -218,18 +319,11 @@ class FormWidget(QWidget):
         data = self.get_data()
         sig_map = self._save_signature_images()
 
-        # Pick a template id if present; else default to 'default'
         template_id = str(self.schema.get("template_id", "default"))
-        # Choose which signature to send to your generator (if you only accept one)
-        primary_sig_path = None
-        if sig_map:
-            # choose first signature field as primary for PDF, you can customize this
-            primary_sig_path = next(iter(sig_map.values()))
+        primary_sig_path = next(iter(sig_map.values())) if sig_map else None
 
-        # Call injected or default pdf generator
         self.pdf_generator(data, primary_sig_path, template_id)
 
-        # optional cleanup of temp signature files
         for p in sig_map.values():
             try:
                 os.remove(p)
@@ -258,13 +352,64 @@ class FormWidget(QWidget):
     def on_back(self):
         if self.main_window and hasattr(self.main_window, "go_to_home"):
             self.main_window.go_to_home()
+    
+    def set_data(self, data: Dict[str, Any], strict: bool = False) -> None:
+        """
+        Prefill or update the form's widgets from a dict.
 
+        - Keys should match field 'name' in your schema.
+        - For dates: accept 'yyyy-MM-dd' or QDate (extendable).
+        - For signature: if your SignaturePad supports loading, pass a file path or bytes per your implementation.
+        - strict=True will raise KeyError for unknown fields; otherwise they’re ignored.
+        """
+        for key, val in data.items():
+            if key not in self.widgets:
+                if strict:
+                    raise KeyError(f"Unknown field '{key}'")
+                continue
 
-class FormFactory:
-    """
-    Turn a schema into a FormWidget. You can also register common field presets if you like.
-    """
+            w = self.widgets[key]
+
+            if isinstance(w, QLineEdit):
+                w.setText("" if val is None else str(val))
+
+            elif isinstance(w, QTextEdit):
+                w.setPlainText("" if val is None else str(val))
+
+            elif isinstance(w, QDateEdit):
+                if val is None:
+                    continue
+                qd = self._to_qdate(val)
+                if qd:
+                    w.setDate(qd)
+
+            elif isinstance(w, SignaturePad):
+                # Optional: implement loading if your SignaturePad supports it
+                # e.g., if val is a file path or bytes/base64
+                if hasattr(w, "load_image") and isinstance(val, str):
+                    # path or data URL
+                    w.load_image(val)
+                elif hasattr(w, "load_bytes") and isinstance(val, (bytes, bytearray)):
+                    w.load_bytes(val)
+                # else: skip silently
+
+            else:
+                # Fallback: try .setText if exists
+                setter = getattr(w, "setText", None)
+                if callable(setter):
+                    setter("" if val is None else str(val))
+
+    # ---------- COMPAT LAYER ----------
     @staticmethod
-    def build(main_window, schema: Dict[str, Any],
-              pdf_generator: Optional[Callable[[Dict[str, Any], Optional[str], str], None]] = None) -> QWidget:
-        return FormWidget(main_window, schema, pdf_generator)
+    def build(
+        main_window,
+        schema: Dict[str, Any],
+        pdf_generator: Optional[Callable[[Dict[str, Any], Optional[str], str], None]] = None,
+        initial_data: Optional[Dict[str, Any]] = None,   
+
+    ) -> QWidget:
+        """
+        Compatibility with code that expects FormFactory.build(...).
+        Returns a ready-to-use QWidget instance.
+        """
+        return FormFactory(main_window, schema, pdf_generator, initial_data)
