@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication, QStackedWidget
 import sys
 import os
 import json
-
+from typing import Optional
 # themes 
 from themes.themes import apply_theme
 
@@ -56,28 +56,27 @@ class MainApp(QStackedWidget):
             self.home_page.set_user()
         self.setCurrentWidget(self.home_page)
 
-    def go_to_form(self, form_key: str):
-        """
-        Navigate to a form defined in FORM_REGISTRY, building it on first use.
-        """
+
+    def go_to_form(self, form_key: str, initial_data: Optional[dict] = None):
         if form_key not in FORM_REGISTRY:
-            # You can show a toast/dialog instead if you prefer
             print(f"[MainApp] Unknown form key: {form_key}")
             return
 
         if form_key not in self._form_widgets:
             cfg = FORM_REGISTRY[form_key]
             schema = cfg["schema"]
-            pdf_gen = cfg.get("pdf_generator")  # may be None -> default
+            pdf_gen = cfg.get("pdf_generator")
 
-            # Build QWidget from schema via FormFactory (returns FormWidget)
-            form_widget = FormFactory.build(self, schema, pdf_gen)
-
-            # Add to stack and cache
+            form_widget = FormFactory.build(self, schema, pdf_gen, initial_data=initial_data)  # <--
             self.addWidget(form_widget)
             self._form_widgets[form_key] = form_widget
+        else:
+            # If it already exists, you can still apply new data:
+            if initial_data:
+                self._form_widgets[form_key].set_data(initial_data)
 
         self.setCurrentWidget(self._form_widgets[form_key])
+
 
     # Backwards-compat for your existing code (optional)
     def go_to_page(self, page_name: str):

@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, QFormLayout, QScrollArea, QDateEdit, QMessageBox
 )
 from PyQt5.QtCore import QDate, Qt
-from typing import Callable, Dict, Any, Optional, List, Tuple
+from typing import Callable, Dict, Any, Optional, List, Tuple, Union
 import tempfile, os
 
 from pages.signiture import SignaturePad
@@ -19,7 +19,8 @@ class FormFactory(QWidget):
         self,
         main_window,
         schema: Dict[str, Any],
-        pdf_generator: Optional[Callable[[Dict[str, Any], Optional[str], str], None]] = None
+        pdf_generator: Optional[Callable[[Dict[str, Any], Optional[str], str], None]] = None,
+        initial_data: Optional[Dict[str, Any]] = None,   # <-- NEW
     ):
         super().__init__()
         self.setObjectName("FormRoot")  # QSS target
@@ -38,6 +39,10 @@ class FormFactory(QWidget):
         extra_qss = self.schema.get("extra_qss")
         if extra_qss:
             self.setStyleSheet(extra_qss)
+        
+        # Apply prefill if provided
+        if initial_data:
+            self.set_data(initial_data) 
 
     # ---------- UI BUILD ----------
     def _build_ui(self):
@@ -141,6 +146,18 @@ class FormFactory(QWidget):
                      self.schema.get("back_text", "Back"))
                 out.append((kind, text, a.get("variant")))
         return out
+    
+    ## ------------Helper prefill data 
+    def _to_qdate(self, value: Union[str, QDate]) -> Optional[QDate]:
+        if isinstance(value, QDate):
+            return value if value.isValid() else None
+        if isinstance(value, str):
+            # common formats; add more if you need
+            for fmt in ("yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy"):
+                qd = QDate.fromString(value, fmt)
+                if qd.isValid():
+                    return qd
+        return None
 
     def _make_field_label(self, text: str, required: bool = False) -> QLabel:
         lbl = QLabel(f"{text}{' *' if required else ''}:")
@@ -335,16 +352,64 @@ class FormFactory(QWidget):
     def on_back(self):
         if self.main_window and hasattr(self.main_window, "go_to_home"):
             self.main_window.go_to_home()
+    
+    def set_data(self, data: Dict[str, Any], strict: bool = False) -> None:
+        """
+        Prefill or update the form's widgets from a dict.
+
+        - Keys should match field 'name' in your schema.
+        - For dates: accept 'yyyy-MM-dd' or QDate (extendable).
+        - For signature: if your SignaturePad supports loading, pass a file path or bytes per your implementation.
+        - strict=True will raise KeyError for unknown fields; otherwise they’re ignored.
+        """
+        for key, val in data.items():
+            if key not in self.widgets:
+                if strict:
+                    raise KeyError(f"Unknown field '{key}'")
+                continue
+
+            w = self.widgets[key]
+
+            if isinstance(w, QLineEdit):
+                w.setText("" if val is None else str(val))
+
+            elif isinstance(w, QTextEdit):
+                w.setPlainText("" if val is None else str(val))
+
+            elif isinstance(w, QDateEdit):
+                if val is None:
+                    continue
+                qd = self._to_qdate(val)
+                if qd:
+                    w.setDate(qd)
+
+            elif isinstance(w, SignaturePad):
+                # Optional: implement loading if your SignaturePad supports it
+                # e.g., if val is a file path or bytes/base64
+                if hasattr(w, "load_image") and isinstance(val, str):
+                    # path or data URL
+                    w.load_image(val)
+                elif hasattr(w, "load_bytes") and isinstance(val, (bytes, bytearray)):
+                    w.load_bytes(val)
+                # else: skip silently
+
+            else:
+                # Fallback: try .setText if exists
+                setter = getattr(w, "setText", None)
+                if callable(setter):
+                    setter("" if val is None else str(val))
 
     # ---------- COMPAT LAYER ----------
     @staticmethod
     def build(
         main_window,
         schema: Dict[str, Any],
-        pdf_generator: Optional[Callable[[Dict[str, Any], Optional[str], str], None]] = None
+        pdf_generator: Optional[Callable[[Dict[str, Any], Optional[str], str], None]] = None,
+        initial_data: Optional[Dict[str, Any]] = None,   
+
     ) -> QWidget:
         """
         Compatibility with code that expects FormFactory.build(...).
         Returns a ready-to-use QWidget instance.
         """
-        return FormFactory(main_window, schema, pdf_generator)
+        return FormFactory(main_window, schema, pdf_generator, initial_data)
