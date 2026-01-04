@@ -17,6 +17,9 @@ import json
 class MainApp(QStackedWidget):
     def __init__(self):
         super().__init__()
+        
+        # Load Stylesheet
+        self.load_stylesheet()
 
         self.login_page = LoginPage(self)
         self.home_page = HomePage(self)
@@ -50,6 +53,22 @@ class MainApp(QStackedWidget):
                 return data['user']
         except (FileNotFoundError, json.JSONDecodeError):
             return None
+
+    def load_stylesheet(self):
+        try:
+            # Look for the themes folder relative to CWD or script location
+            cwd = os.getcwd()
+            qss_path = os.path.join(cwd, "themes", "modern.qss")
+            if not os.path.exists(qss_path):
+                # Fallback to absolute path if needed or relative to script 
+                # (Assuming script is in the root)
+                pass 
+            
+            with open(qss_path, "r") as f:
+                style = f.read()
+                self.setStyleSheet(style)
+        except Exception as e:
+            print(f"Failed to load stylesheet: {e}")
 
 
 
