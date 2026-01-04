@@ -1,4 +1,10 @@
-# main.py
+# TODO: 
+'''
+Merge the changes from sub branch factory  into main
+get colour pallat from tash 
+get all the documents we need 
+ammend the document styles
+'''
 from PyQt5.QtWidgets import QApplication, QStackedWidget
 from pages.login_page import LoginPage
 from pages.home_page import HomePage
