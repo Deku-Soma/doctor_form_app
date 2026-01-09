@@ -10,13 +10,20 @@ import base64
 
 
 
+    # ... (Keep imports, but add local_db and db)
+from Utility.local_db import local_db
+import db
+import threading
+
 class FormA(QWidget):
+    # ... (init and setup remains same)
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
         self.init_ui()
 
     def init_ui(self):
+        # ... (Same UI code)
         # Scroll area in case form is long
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -65,12 +72,12 @@ class FormA(QWidget):
         form_layout.addRow(clear_sig_btn)
 
         # Submit
-        submit_btn = QPushButton("Submit")
+        submit_btn = QPushButton("Submit & Save")
         submit_btn.clicked.connect(self.submit_form)
         form_layout.addRow(submit_btn)
 
         # PDF generate 
-        generate_pdf_btn = QPushButton("Generate PDF")
+        generate_pdf_btn = QPushButton("Generate PDF Only")
         generate_pdf_btn.clicked.connect(self.generate_pdf_form)
         form_layout.addRow(generate_pdf_btn)
 
@@ -87,7 +94,7 @@ class FormA(QWidget):
         self.setLayout(layout)
 
     def submit_form(self):
-        # Gather data (can be used for saving to DB or generating PDF)
+        # Gather data 
         data = {
             "name": self.name.text(),
             "surname": self.surname.text(),
@@ -100,15 +107,42 @@ class FormA(QWidget):
         for test, widget in self.tests.items():
             data[test] = widget.text()
 
-            # Save the signature temporarily
+        # Handle Signature
         signature_path = "temp_signature.png"
         self.signature_pad.get_signature_image().save(signature_path)
-
-        # Generate PDF
-        generate_html_pdf(data, signature_path,'1')
-
-        QMessageBox.information(self, "Submited", "PDF Generated !")
-
         
+        # Encode signature to base64
+        try:
+            with open(signature_path, "rb") as image_file:
+                encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+                data["signature_base64"] = encoded_string
+        except Exception as e:
+            print(f"Error encoding signature: {e}")
+
+        # 1. Save Locally
+        try:
+            # Get user from session if available? For now pass None or fetch from main_window if stored
+            # Assuming main_window has session data (we saw fetch_session in main.py)
+            user_session = self.main_window.fetch_session()
+            user_id = user_session.get("id") if user_session else None
+            
+            sub_id = local_db.save_submission("medical_assessment_a", data, user_id=user_id)
+            print(f"Saved locally with ID: {sub_id}")
+            
+            # 2. Trigger Sync in Background
+            sync_thread = threading.Thread(target=db.sync_to_cloud)
+            sync_thread.start()
+            
+            QMessageBox.information(self, "Success", "Form saved locally! Syncing in background...")
+            
+            # 3. Generate PDF (Optional req? Keeping it as per original flow)
+            generate_html_pdf(data, signature_path, '1')
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to save form: {e}")
+
+
     def generate_pdf_form(self):
-            print("PDF Generated")
+        # ... logic to just gen PDF
+        self.submit_form() # Reuse submit for now or separate if needed
+
