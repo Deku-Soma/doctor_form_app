@@ -1,0 +1,371 @@
+<!--
+HTML template for: "CERTIFICATE OF FITNESS - New"
+Source: :contentReference[oaicite:0]{index=0}
+
+Goals:
+- Print-faithful layout (A4), clean lines, form-like inputs.
+- Easy to map to a form builder via name="" attributes.
+- Checkboxes/radio buttons for “Type of medical”, “Outcome”, “Tests Conducted”, and “Additional questionnaires”.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Certificate of Fitness</title>
+  <style>
+    :root{
+      --ink:#111;
+      --grid:#000;
+      --muted:#333;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 12.5px;
+      --gap: 10px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    /* A4 page shell */
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:18mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .page{
+        margin:0;
+        box-shadow:none;
+        width:auto;
+        min-height:auto;
+        padding:14mm 12mm;
+      }
+      .no-print{ display:none !important; }
+    }
+
+    .center{ text-align:center; }
+    .right{ text-align:right; }
+    .h1{
+      font-weight:700;
+      margin:10px 0 6px 0;
+      font-size:18px;
+      letter-spacing:.6px;
+    }
+    .brand{
+      font-weight:700;
+      font-size:14px;
+      margin:0 0 3px 0;
+    }
+    .tagline{
+      margin:0 0 8px 0;
+      font-style:italic;
+      font-size:12.5px;
+    }
+    .contact{
+      margin:0;
+      font-size:12px;
+      line-height:1.25;
+    }
+
+    hr.sep{
+      border:0;
+      border-top:1px solid #bbb;
+      margin:12px 0;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:var(--fs);
+    }
+
+    .grid td, .grid th{
+      border:1px solid var(--grid);
+      padding:8px 8px;
+      vertical-align:top;
+    }
+
+    .label{
+      font-weight:700;
+      width:28%;
+      white-space:nowrap;
+    }
+
+    input[type="text"], input[type="date"], textarea, select{
+      width:100%;
+      border:0;
+      outline:none;
+      font-family:var(--font);
+      font-size:var(--fs);
+      padding:0;
+      margin:0;
+      background:transparent;
+      color:var(--ink);
+    }
+
+    textarea{
+      resize:none;
+      min-height:64px;
+      line-height:1.25;
+    }
+
+    .section-title{
+      font-weight:700;
+      margin:14px 0 8px 0;
+      font-size:13px;
+      text-transform:uppercase;
+    }
+
+    .choice-grid{
+      border:1px solid var(--grid);
+      padding:10px;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:8px 14px;
+      font-size:var(--fs);
+    }
+
+    .choice{
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      line-height:1.2;
+    }
+    .choice input{
+      transform:translateY(2px);
+      flex:0 0 auto;
+    }
+
+    .two-col{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+
+    .note{
+      color:var(--muted);
+      font-size:11.5px;
+    }
+
+    .sigline{
+      border-bottom:1px solid var(--grid);
+      height:22px;
+      margin-top:8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- Header / branding -->
+    <div class="center">
+      <div class="brand">
+        <input type="text" name="brand_name" value="Complete Wellbeing" aria-label="Brand name" />
+      </div>
+      <div class="tagline">
+        <input type="text" name="brand_tagline" value="“Corporate Wellness Services”" aria-label="Tagline" />
+      </div>
+
+      <p class="contact">
+        <input type="text" name="brand_address_line" value="377 Rivonia Boulevard, Spaces Building, Rivonia" aria-label="Address line" />
+      </p>
+      <p class="contact">
+        <span style="font-weight:700;">Tel</span>
+        <input type="text" name="brand_tel" value="087 821 6449 or 062 968 9981" aria-label="Telephone" />
+      </p>
+      <p class="contact">
+        <input type="text" name="brand_email" value="info@completewellbeing.co.za" aria-label="Email" />
+      </p>
+      <p class="contact">
+        <input type="text" name="brand_website" value="www.completewellbeing.co.za" aria-label="Website" />
+      </p>
+
+      <div class="h1">CERTIFICATE OF FITNESS</div>
+    </div>
+
+    <hr class="sep" />
+
+    <!-- Personal + employment details -->
+    <table class="grid">
+      <tr>
+        <td class="label">Name</td>
+        <td><input type="text" name="first_name" placeholder="Enter name" /></td>
+      </tr>
+      <tr>
+        <td class="label">Surname</td>
+        <td><input type="text" name="surname" placeholder="Enter surname" /></td>
+      </tr>
+      <tr>
+        <td class="label">ID/PP Number</td>
+        <td><input type="text" name="id_pp_number" placeholder="Enter ID/Passport number" /></td>
+      </tr>
+      <tr>
+        <td class="label">Company</td>
+        <td><input type="text" name="company" placeholder="Enter company" /></td>
+      </tr>
+      <tr>
+        <td class="label">Occupation</td>
+        <td><input type="text" name="occupation" placeholder="Enter occupation" /></td>
+      </tr>
+      <tr>
+        <td class="label">Date of examination</td>
+        <td><input type="date" name="date_of_examination" /></td>
+      </tr>
+      <tr>
+        <td class="label">Date of expiry</td>
+        <td><input type="date" name="date_of_expiry" /></td>
+      </tr>
+    </table>
+
+    <!-- Type of medical -->
+    <div class="section-title">Type of medical</div>
+    <div class="choice-grid" role="group" aria-label="Type of medical">
+      <label class="choice"><input type="checkbox" name="medical_type_pre_employment" value="1" /> Pre-employment</label>
+      <label class="choice"><input type="checkbox" name="medical_type_baseline" value="1" /> Baseline</label>
+      <label class="choice"><input type="checkbox" name="medical_type_periodical" value="1" /> Periodical</label>
+      <label class="choice"><input type="checkbox" name="medical_type_exit" value="1" /> Exit</label>
+    </div>
+
+    <!-- Outcome of Medical Examination -->
+    <div class="section-title">Outcome of Medical Examination</div>
+    <div class="note" style="margin-bottom:8px;">
+      I certify that I have, by examination and testing, using the above criteria specified by the employer,
+      satisfied myself that the above-mentioned employee is:
+    </div>
+
+    <div class="choice-grid" role="radiogroup" aria-label="Outcome of medical examination">
+      <label class="choice">
+        <input type="radio" name="outcome" value="Fit for duty" />
+        Fit for duty
+      </label>
+
+      <label class="choice">
+        <input type="radio" name="outcome" value="Fit for duty, with conditions" />
+        Fit for duty, with conditions
+      </label>
+
+      <label class="choice">
+        <input type="radio" name="outcome" value="Fit for duty, with restrictions" />
+        Fit for duty, with restrictions
+      </label>
+
+      <label class="choice">
+        <input type="radio" name="outcome" value="Not fit for duty, requires referral and follow-up" />
+        Not fit for duty, requires referral and follow-up
+      </label>
+    </div>
+
+    <div style="margin-top:10px;">
+      <div class="note" style="font-weight:700; margin-bottom:6px;">Comments:</div>
+      <div style="border:1px solid var(--grid); padding:8px;">
+        <textarea name="outcome_comments" placeholder="Enter comments (if any)"></textarea>
+      </div>
+    </div>
+
+    <!-- Tests Conducted -->
+    <div class="section-title">Tests Conducted</div>
+    <div class="choice-grid" role="group" aria-label="Tests conducted">
+      <label class="choice"><input type="checkbox" name="test_physical_examination" value="1" /> Physical examination</label>
+      <label class="choice"><input type="checkbox" name="test_blood_pressure" value="1" /> Blood Pressure</label>
+      <label class="choice"><input type="checkbox" name="test_glucose" value="1" /> Glucose Test</label>
+      <label class="choice"><input type="checkbox" name="test_urine_screening" value="1" /> Urine screening</label>
+      <label class="choice"><input type="checkbox" name="test_audiometry" value="1" /> Audiometry</label>
+      <label class="choice"><input type="checkbox" name="test_lung_function" value="1" /> Lung Function</label>
+      <label class="choice"><input type="checkbox" name="test_bmi" value="1" /> BMI (Height &amp; Weight)</label>
+      <label class="choice"><input type="checkbox" name="test_drug_test" value="1" /> Drug Test</label>
+      <label class="choice"><input type="checkbox" name="test_vision_screening" value="1" /> Vision screening</label>
+      <label class="choice"><input type="checkbox" name="test_hiv" value="1" /> HIV Test</label>
+      <label class="choice"><input type="checkbox" name="test_cholesterol" value="1" /> Cholesterol</label>
+      <label class="choice"><input type="checkbox" name="test_other" value="1" /> Other</label>
+    </div>
+
+    <div style="margin-top:10px;">
+      <div class="note" style="font-weight:700; margin-bottom:6px;">Comments</div>
+      <div style="border:1px solid var(--grid); padding:8px;">
+        <textarea name="tests_comments" placeholder="Enter test comments / other tests"></textarea>
+      </div>
+    </div>
+
+    <!-- Additional questionnaires -->
+    <div class="section-title">Additional questionnaires completed</div>
+    <div class="choice-grid" role="group" aria-label="Additional questionnaires completed">
+      <label class="choice"><input type="checkbox" name="q_working_at_heights" value="1" /> Working at heights</label>
+      <label class="choice"><input type="checkbox" name="q_shift_work" value="1" /> Shift work</label>
+      <label class="choice"><input type="checkbox" name="q_psycho_social" value="1" /> Psycho-social</label>
+      <label class="choice"><input type="checkbox" name="q_general_health" value="1" /> General health</label>
+      <label class="choice"><input type="checkbox" name="q_other" value="1" /> Other</label>
+      <div></div>
+    </div>
+
+    <!-- Practitioner -->
+    <div class="section-title">Occupational Health Medical Practitioner</div>
+
+    <table class="grid">
+      <tr>
+        <td class="label">Name</td>
+        <td>
+          <input type="text" name="practitioner_name" placeholder="Practitioner full name" />
+          <div class="note">(Please print names in full)</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Signature</td>
+        <td>
+          <div class="sigline"></div>
+          <div class="note">Sign here (or capture digital signature in the app)</div>
+        </td>
+      </tr>
+    </table>
+
+    <div class="two-col" style="margin-top:10px;">
+      <table class="grid">
+        <tr>
+          <td class="label">HPCSA / SANC number / PR Number</td>
+          <td>
+            <input type="text" name="practitioner_reg_numbers" placeholder="e.g. HPCSA: ####### / PR: #######" />
+          </td>
+        </tr>
+      </table>
+
+      <table class="grid">
+        <tr>
+          <td class="label">Date</td>
+          <td><input type="date" name="practitioner_date" /></td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="margin-top:10px;">
+      <table class="grid">
+        <tr>
+          <td class="label">Address</td>
+          <td><input type="text" name="practitioner_address" placeholder="Practice address" /></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Optional hidden metadata -->
+    <input type="hidden" name="template_name" value="certificate_of_fitness" />
+    <input type="hidden" name="template_version" value="1.0" />
+
+    <div class="no-print" style="margin-top:12px;">
+      <div class="note">
+        Tip: If your PDF generator clips the bottom margin, reduce <code>padding</code> on <code>.page</code> or set print margins to “None”.
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

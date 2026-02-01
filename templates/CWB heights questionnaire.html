@@ -1,0 +1,369 @@
+<!--
+HTML template for: "WORKING AT HEIGHTS / GENERAL HEALTH QUESTIONNAIRE"
+Source: :contentReference[oaicite:0]{index=0}
+
+- A4 print-friendly layout
+- Fillable fields (name="" attributes)
+- Yes/No per item (radio pairs)
+- Employee + Examiner declaration blocks with signature/date
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Working at Heights / General Health Questionnaire</title>
+  <style>
+    :root{
+      --ink:#111;
+      --grid:#000;
+      --muted:#333;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 12.5px;
+      --pad: 8px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    /* A4 page */
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:18mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .page{
+        margin:0;
+        box-shadow:none;
+        width:auto;
+        min-height:auto;
+        padding:14mm 12mm;
+      }
+      .no-print{ display:none !important; }
+    }
+
+    .center{ text-align:center; }
+    .h1{
+      font-weight:700;
+      font-size:15.5px;
+      letter-spacing:.3px;
+      margin:0 0 12px 0;
+      text-transform:uppercase;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:var(--fs);
+    }
+    .grid td, .grid th{
+      border:1px solid var(--grid);
+      padding:var(--pad);
+      vertical-align:top;
+    }
+    .grid th{
+      font-weight:700;
+      text-align:left;
+      background:#fff;
+    }
+
+    input[type="text"], input[type="date"], textarea{
+      width:100%;
+      border:0;
+      outline:none;
+      font-family:var(--font);
+      font-size:var(--fs);
+      padding:0;
+      margin:0;
+      background:transparent;
+      color:var(--ink);
+    }
+
+    .label{
+      font-weight:700;
+      white-space:nowrap;
+      width:30%;
+    }
+
+    .qtable .col-num{ width:7%; text-align:center; font-weight:700; }
+    .qtable .col-q{ width:73%; }
+    .qtable .col-yn{ width:10%; text-align:center; }
+
+    .radio{
+      transform:translateY(1px);
+    }
+
+    .decl{
+      margin-top:14px;
+      border:1px solid var(--grid);
+      padding:10px;
+      font-size:var(--fs);
+    }
+    .decl-title{
+      font-weight:700;
+      margin:0 0 8px 0;
+    }
+    .decl p{
+      margin:0 0 10px 0;
+      line-height:1.25;
+    }
+
+    .sigline{
+      border-bottom:1px solid var(--grid);
+      height:22px;
+      margin-top:8px;
+    }
+
+    .two-col{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .note{
+      color:var(--muted);
+      font-size:11.5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="center">
+      <div class="h1">Working at Heights / General Health Questionnaire</div>
+    </div>
+
+    <!-- Employee header -->
+    <table class="grid" style="margin-bottom:12px;">
+      <tr>
+        <td class="label">Full name &amp; Surname</td>
+        <td><input type="text" name="full_name_surname" placeholder="Enter full name and surname" /></td>
+      </tr>
+    </table>
+
+    <div class="note" style="margin:0 0 6px 0; font-weight:700;">
+      Do you currently have or previously had:
+    </div>
+
+    <!-- Questions -->
+    <table class="grid qtable" aria-label="Working at heights questionnaire items">
+      <thead>
+        <tr>
+          <th class="col-num">#</th>
+          <th class="col-q">Question</th>
+          <th class="col-yn">Y</th>
+          <th class="col-yn">N</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-num">1</td>
+          <td class="col-q">Diagnosed with neurological conditions, epilepsy, convulsions</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q01_neuro_epilepsy_convulsions" value="Y" aria-label="Yes"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q01_neuro_epilepsy_convulsions" value="N" aria-label="No"></td>
+        </tr>
+        <tr>
+          <td class="col-num">2</td>
+          <td class="col-q">Frequent headaches</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q02_frequent_headaches" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q02_frequent_headaches" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">3</td>
+          <td class="col-q">Head injury</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q03_head_injury" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q03_head_injury" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">4</td>
+          <td class="col-q">On medication for depression, anxiety, mental conditions</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q04_meds_depression_anxiety_mental" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q04_meds_depression_anxiety_mental" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">5</td>
+          <td class="col-q">Previous suicide attempts</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q05_previous_suicide_attempts" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q05_previous_suicide_attempts" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">6</td>
+          <td class="col-q">Sleep disorders or struggle to sleep at night</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q06_sleep_disorders" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q06_sleep_disorders" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">7</td>
+          <td class="col-q">Depression</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q07_depression" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q07_depression" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">8</td>
+          <td class="col-q">Dizziness or fainting spells</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q08_dizziness_fainting" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q08_dizziness_fainting" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">9</td>
+          <td class="col-q">Epilepsy</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q09_epilepsy" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q09_epilepsy" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">10</td>
+          <td class="col-q">Hearing problems</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q10_hearing_problems" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q10_hearing_problems" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">11</td>
+          <td class="col-q">Problems with ears/ ringing in ears / discharges/ frequent infections</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q11_ear_ringing_discharges_infections" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q11_ear_ringing_discharges_infections" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">12</td>
+          <td class="col-q">Vision/eye problems/ need to wear glasses to see</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q12_vision_eye_glasses" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q12_vision_eye_glasses" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">13</td>
+          <td class="col-q">Heart problems</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q13_heart_problems" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q13_heart_problems" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">14</td>
+          <td class="col-q">High blood pressure</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q14_high_blood_pressure" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q14_high_blood_pressure" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">15</td>
+          <td class="col-q">Lung problems / asthma</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q15_lung_problems_asthma" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q15_lung_problems_asthma" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">16</td>
+          <td class="col-q">Diabetes (high or low blood sugar)</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q16_diabetes_blood_sugar" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q16_diabetes_blood_sugar" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">17</td>
+          <td class="col-q">Taking any medication</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q17_taking_any_medication" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q17_taking_any_medication" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">18</td>
+          <td class="col-q">Advised by a doctor/ medical professional not to do exercise</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q18_advised_not_exercise" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q18_advised_not_exercise" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">19</td>
+          <td class="col-q">Kidney problems</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q19_kidney_problems" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q19_kidney_problems" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">20</td>
+          <td class="col-q">Back or any muscle problems / joint pains</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q20_back_muscle_joint_pain" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q20_back_muscle_joint_pain" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">21</td>
+          <td class="col-q">Experience a feeling of needles and pins or numbness in arms/ hands/ legs/ feet</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q21_pins_needles_numbness" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q21_pins_needles_numbness" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">22</td>
+          <td class="col-q">Suffer from fear of heights, small spaces</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q22_fear_heights_small_spaces" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q22_fear_heights_small_spaces" value="N"></td>
+        </tr>
+        <tr>
+          <td class="col-num">23</td>
+          <td class="col-q">Taking medication that can make you feel dizzy, drowsy</td>
+          <td class="col-yn"><input class="radio" type="radio" name="q23_meds_dizzy_drowsy" value="Y"></td>
+          <td class="col-yn"><input class="radio" type="radio" name="q23_meds_dizzy_drowsy" value="N"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Employee declaration -->
+    <div class="decl">
+      <div class="decl-title">Employee</div>
+      <p>
+        I hereby declare that all information attached to this examination is to the best of my knowledge true and correct
+        and no further information is omitted or withheld. I am in good physical condition and have the physical strength
+        and stamina to undertake climbing activities and working at elevated spaces. The results were discussed with me for acceptance.
+      </p>
+
+      <div class="two-col">
+        <div>
+          <div class="note" style="font-weight:700;">Signature</div>
+          <div class="sigline"></div>
+          <input type="hidden" name="employee_signature_data" value="" />
+          <div class="note">Sign here (or capture digital signature in the app)</div>
+        </div>
+        <div>
+          <div class="note" style="font-weight:700;">Date</div>
+          <input type="date" name="employee_signature_date" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Examiner declaration -->
+    <div class="decl">
+      <div class="decl-title">Examiner</div>
+      <p>
+        I hereby certify that I examined the applicant/employee. This report and attachments embody my finding completely and correctly
+        and results were discussed with the employee/applicant.
+      </p>
+
+      <div class="two-col">
+        <div>
+          <div class="note" style="font-weight:700;">Signature</div>
+          <div class="sigline"></div>
+          <input type="hidden" name="examiner_signature_data" value="" />
+          <div class="note">Sign here (or capture digital signature in the app)</div>
+        </div>
+        <div>
+          <div class="note" style="font-weight:700;">Date</div>
+          <input type="date" name="examiner_signature_date" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <input type="hidden" name="template_name" value="working_at_heights_general_health_questionnaire" />
+    <input type="hidden" name="template_version" value="1.0" />
+
+    <div class="no-print" style="margin-top:12px;">
+      <div class="note">
+        If you want the Yes/No to render as a single toggle (instead of two columns), I can convert each row to a compact inline control.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

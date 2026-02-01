@@ -1,0 +1,420 @@
+<!--
+HTML template (with variables) for: "Hot/Cold Exposure Medical Surveillance Survey"
+Source: :contentReference[oaicite:0]{index=0}
+
+Variables use Handlebars-style: {{variable}} and {{#if ...}} blocks.
+Swap to your templating engine (Jinja2/EJS/etc.) if needed.
+
+Suggested data keys:
+title,
+employee.first_name, employee.last_name, employee.id_number, employee.telephone, employee.date, employee.job_title,
+partB.humidity_over_30c, partB.hot_indoor_over_30min, partB.cold_below_minus15_or_windchill_minus25, partB.other_text,
+partC.hot_any_conditions, partC.cold_any_conditions,
+partC2.hot_any_conditions, partC2.cold_any_conditions,
+partC.other_conditions_yes, partC.other_conditions_text,
+sign.employee_name, sign.employee_signature, sign.employee_signature_date
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{title}}</title>
+  <style>
+    :root{
+      --ink:#111;
+      --grid:#000;
+      --muted:#333;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 13px;
+      --pad: 8px;
+      --shade: #dfe6ff; /* light bluish fill like the doc */
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    /* A4 page */
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:16mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .page{ margin:0; box-shadow:none; width:auto; min-height:auto; }
+      .no-print{ display:none !important; }
+    }
+
+    .title{
+      font-weight:800;
+      font-size:44px;
+      line-height:1.05;
+      margin:0 0 14px 0;
+    }
+
+    .part-head{
+      font-weight:800;
+      font-size:18px;
+      margin:14px 0 6px 0;
+      background:#efefef;
+      padding:6px 8px;
+      border:1px solid #cfcfcf;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:var(--fs);
+    }
+
+    .grid td, .grid th{
+      border:1px solid var(--grid);
+      padding:6px 8px;
+      vertical-align:middle;
+    }
+
+    .shade{
+      background:var(--shade);
+    }
+
+    .lbl{
+      width:22%;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    input[type="text"], input[type="date"], input[type="tel"]{
+      width:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      font-family:var(--font);
+      font-size:var(--fs);
+    }
+
+    .hint{
+      font-style:italic;
+      margin:4px 0 8px 0;
+      color:#000;
+    }
+
+    .checkrow{
+      display:grid;
+      grid-template-columns: 34px 1fr;
+      border:1px solid var(--grid);
+      border-top:0;
+      background:var(--shade);
+      align-items:center;
+      min-height:34px;
+    }
+    .checkrow:first-of-type{
+      border-top:1px solid var(--grid);
+    }
+    .checkcell{
+      border-right:1px solid var(--grid);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100%;
+      padding:6px 0;
+    }
+    .checkcell input{
+      width:18px;
+      height:18px;
+      accent-color:#111;
+    }
+    .checktext{
+      padding:6px 10px;
+    }
+
+    .two-col{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+      align-items:start;
+      margin-top:10px;
+    }
+
+    .env-title{
+      font-weight:800;
+      font-size:28px;
+      margin:0 0 6px 0;
+    }
+
+    .yn{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-weight:700;
+      font-size:22px;
+      margin-left:10px;
+    }
+    .yn label{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .yn input{
+      width:20px;
+      height:20px;
+      accent-color:#111;
+    }
+
+    .cond{
+      margin:0;
+      padding-left:0;
+      list-style:none;
+      font-size:26px;
+      line-height:1.18;
+    }
+
+    .note{
+      margin-top:12px;
+      font-size:18px;
+    }
+
+    .sig{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: 1fr 240px;
+      gap:14px;
+      align-items:end;
+    }
+    .sig .line{
+      border-bottom:2px solid #000;
+      min-height:26px;
+      padding:0 2px 2px 2px;
+    }
+    .sig .cap{
+      font-size:14px;
+      margin-top:6px;
+    }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <h1 class="title">{{#if title}}{{title}}{{else}}Hot/Cold Exposure Medical Surveillance Survey{{/if}}</h1>
+
+    <!-- Part A -->
+    <div class="part-head">Part A: EMPLOYEE INFORMATION</div>
+    <table class="grid">
+      <tr>
+        <td class="lbl">First Name:</td>
+        <td class="shade"><input type="text" name="employee_first_name" value="{{employee.first_name}}" /></td>
+
+        <td class="lbl">Last Name:</td>
+        <td class="shade"><input type="text" name="employee_last_name" value="{{employee.last_name}}" /></td>
+      </tr>
+      <tr>
+        <td class="lbl">ID Number:</td>
+        <td class="shade"><input type="text" name="employee_id_number" value="{{employee.id_number}}" /></td>
+
+        <td class="lbl">Telephone:</td>
+        <td class="shade"><input type="tel" name="employee_telephone" value="{{employee.telephone}}" /></td>
+      </tr>
+      <tr>
+        <td class="lbl">Date:</td>
+        <td class="shade"><input type="date" name="employee_date" value="{{employee.date}}" /></td>
+
+        <td class="lbl">Job Title:</td>
+        <td class="shade"><input type="text" name="employee_job_title" value="{{employee.job_title}}" /></td>
+      </tr>
+    </table>
+
+    <!-- Part B -->
+    <div class="part-head">Part B: CONDITIONS PERTAINING TO HEAT OR COLD STRESS</div>
+    <div class="hint">Check all that apply:</div>
+
+    <div class="checkrow">
+      <div class="checkcell">
+        <input type="checkbox" name="partB_humidity_over_30c" {{#if partB.humidity_over_30c}}checked{{/if}} />
+      </div>
+      <div class="checktext">Indoor/Outdoor Humidity &gt; 30 degrees Celsius (C)</div>
+    </div>
+
+    <div class="checkrow">
+      <div class="checkcell">
+        <input type="checkbox" name="partB_hot_indoor_over_30min" {{#if partB.hot_indoor_over_30min}}checked{{/if}} />
+      </div>
+      <div class="checktext">
+        Continuous work; &gt;30 minutes in hot indoor areas (e.g. steam plant, mechanical rooms)
+      </div>
+    </div>
+
+    <div class="checkrow">
+      <div class="checkcell">
+        <input type="checkbox" name="partB_cold_below_minus15_or_windchill_minus25" {{#if partB.cold_below_minus15_or_windchill_minus25}}checked{{/if}} />
+      </div>
+      <div class="checktext">
+        Continuous work; &gt;30 minutes in temperatures &lt;-15C or wind chill &lt; -25C
+      </div>
+    </div>
+
+    <div class="checkrow">
+      <div class="checkcell">
+        <input type="checkbox" name="partB_other" {{#if partB.other_text}}checked{{/if}} />
+      </div>
+      <div class="checktext">
+        Other:
+        <input type="text" name="partB_other_text" value="{{partB.other_text}}" style="display:inline-block; width:65%; border-bottom:1px solid #000; margin-left:8px;" />
+      </div>
+    </div>
+
+    <!-- Part C -->
+    <div class="part-head">Part C: WORKER HEALTH CONDITIONS</div>
+    <div class="hint">
+      (Circle or mark an ‘X’ at YES or NO only. <b>Do not specify health condition</b>)
+    </div>
+
+    <div style="font-size:20px; line-height:1.25; margin:8px 0 10px 0;">
+      Some conditions can seriously affect your ability to safely work in hot or cold environments.
+      Do you have or do you experience any of the following, or other conditions that may affect working
+      in hot or cold environments?
+    </div>
+
+    <div class="two-col">
+      <!-- Hot -->
+      <div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div class="env-title">Hot Environment –</div>
+          <div class="yn" aria-label="Hot environment any conditions yes or no">
+            <label>
+              Yes <input type="radio" name="partC_hot_any_conditions" value="Yes" {{#if (eq partC.hot_any_conditions "Yes")}}checked{{/if}} />
+            </label>
+            <label>
+              No <input type="radio" name="partC_hot_any_conditions" value="No" {{#if (eq partC.hot_any_conditions "No")}}checked{{/if}} />
+            </label>
+          </div>
+        </div>
+        <ul class="cond">
+          <li>Shortness of breath</li>
+          <li>Breathing difficulties</li>
+          <li>Chronic Bronchitis</li>
+          <li>Emphysema</li>
+          <li>Lung Disease</li>
+          <li>Severe Allergies</li>
+          <li>Heart Problems</li>
+          <li>Chest pain on exertion</li>
+          <li>Cardiovascular disease</li>
+          <li>Diabetes</li>
+          <li>Fainting spells</li>
+          <li>Seizures</li>
+          <li>Asthma</li>
+          <li>Pacemaker</li>
+          <li>Skin conditions</li>
+          <li>Peripheral Vascular Disease</li>
+          <li>Anhidrosis</li>
+        </ul>
+      </div>
+
+      <!-- Cold -->
+      <div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div class="env-title">Cold Environment –</div>
+          <div class="yn" aria-label="Cold environment any conditions yes or no">
+            <label>
+              Yes <input type="radio" name="partC_cold_any_conditions" value="Yes" {{#if (eq partC.cold_any_conditions "Yes")}}checked{{/if}} />
+            </label>
+            <label>
+              No <input type="radio" name="partC_cold_any_conditions" value="No" {{#if (eq partC.cold_any_conditions "No")}}checked{{/if}} />
+            </label>
+          </div>
+        </div>
+        <ul class="cond">
+          <li>Shortness of breath</li>
+          <li>Breathing difficulties</li>
+          <li>Chronic Bronchitis</li>
+          <li>Emphysema</li>
+          <li>Lung Disease</li>
+          <li>Heart Problems</li>
+          <li>Chest pain on exertion</li>
+          <li>Hypertension</li>
+          <li>Diabetes</li>
+          <li>Fainting spells</li>
+          <li>Seizures</li>
+          <li>Panic attacks</li>
+          <li>Asthma</li>
+          <li>Pacemaker</li>
+          <li>Chronic Obstructive Pulmonary Disease (COPD)</li>
+          <li>Cystic Fibrosis</li>
+          <li>Cold Agglutinins Disease</li>
+          <li>Raynaud’s Disease</li>
+          <li>
+            Any Rheumatic Disease (Systemic lupus erythematosus, SLE, rheumatoid arthritis, RA,
+            spondyloarthritis, SA)
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note">
+      Other condition(s) affecting ability to work in hot or cold environments not indicated above (circle ‘Yes’).
+    </div>
+
+    <div style="margin-top:8px; display:grid; grid-template-columns: 220px 1fr; gap:10px; align-items:center;">
+      <div style="font-weight:800; font-size:20px;">Other conditions –</div>
+      <div style="display:flex; align-items:center; gap:18px; font-size:22px; font-weight:700;">
+        <label style="display:inline-flex; align-items:center; gap:8px;">
+          Yes
+          <input type="radio" name="partC_other_conditions_yes" value="Yes" {{#if (eq partC.other_conditions_yes "Yes")}}checked{{/if}} />
+        </label>
+        <label style="display:inline-flex; align-items:center; gap:8px;">
+          No
+          <input type="radio" name="partC_other_conditions_yes" value="No" {{#if (eq partC.other_conditions_yes "No")}}checked{{/if}} />
+        </label>
+        <input
+          type="text"
+          name="partC_other_conditions_text"
+          value="{{partC.other_conditions_text}}"
+          placeholder="Optional note (if your workflow allows it)"
+          style="flex:1; border-bottom:1px solid #000; font-size:16px;"
+        />
+      </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="sig">
+      <div>
+        <div class="line">{{sign.employee_signature}}</div>
+        <div class="cap">Signature of Employee:</div>
+        <input type="hidden" name="employee_signature_data" value="{{sign.employee_signature_data}}" />
+      </div>
+      <div>
+        <div class="line">{{sign.employee_signature_date}}</div>
+        <div class="cap">Date</div>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <input type="hidden" name="template_name" value="hot_cold_exposure_medical_surveillance_survey" />
+    <input type="hidden" name="template_version" value="1.0" />
+
+    <div class="no-print small" style="margin-top:10px;">
+      If you want this to be *pixel-perfect* (same fonts/sizes as the original), tell me what PDF generator you use
+      (wkhtmltopdf, WeasyPrint, Puppeteer, etc.) and I’ll tune the CSS for it.
+    </div>
+  </div>
+
+  <!-- Optional helper for Handlebars users:
+       If your runtime doesn't provide (eq), register it or replace the checks with your engine's syntax. -->
+</body>
+</html>

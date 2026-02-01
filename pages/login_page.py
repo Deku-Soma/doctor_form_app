@@ -14,45 +14,49 @@ class LoginPage(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
-        self.setWindowTitle("Login / Sign Up")
+        self.setWindowTitle("Login")
         self.init_ui()
 
     def init_ui(self):
-        self.stacked = QStackedWidget()
         self.login_widget = self.create_login_ui()
-        self.signup_widget = self.create_signup_ui()
-
-        self.stacked.addWidget(self.login_widget)
-        self.stacked.addWidget(self.signup_widget)
-
+        
         layout = QVBoxLayout()
-        layout.addWidget(self.stacked)
+        layout.addWidget(self.login_widget)
         self.setLayout(layout)
 
         self.setStyleSheet("""
+            QWidget {
+                background-color: #2d2d2d;
+            }
             QLabel {
                 font-size: 18px;
+                color: #ffffff;
+                background: transparent;
             }
             QLineEdit {
                 padding: 8px;
                 border-radius: 6px;
-                border: 1px solid #ccc;
+                border: 1px solid #4d4d4d;
                 min-width: 500px;
+                background-color: #3d3d3d;
+                color: #ffffff;
+            }
+            QLineEdit:focus {
+                border: 2px solid #163b4d;
             }
             QPushButton {
                 font-size: 18px;
-                background-color: #4295f5;
+                background-color: #163b4d;
                 color: white;
                 border-radius: 6px;
                 padding: 8px;
             }
             QPushButton:hover {
-                background-color: #43818c;
+                background-color: #685070;
             }
         """)
 
     def create_login_ui(self):
-
         # === Main outer widget ===
         widget = QWidget()
 
@@ -63,14 +67,12 @@ class LoginPage(QWidget):
         self.login_password.setEchoMode(QLineEdit.Password)
 
         login_button = QPushButton("Login")
-        switch_button = QPushButton("Switch to Sign Up")
         login_button.clicked.connect(self.login)
-        switch_button.clicked.connect(self.show_signup)
+        # removed switch button
 
         form_layout.addRow("Email:", self.login_email)
         form_layout.addRow("Password:", self.login_password)
         form_layout.addRow(login_button)
-        form_layout.addRow(switch_button)
 
         # === Container widget for the form (for centering) ===
         form_widget = QWidget()
@@ -92,57 +94,6 @@ class LoginPage(QWidget):
         widget.setLayout(hbox)
         return widget
 
-
-    def create_signup_ui(self):
-
-        # === Outer widget ===
-        widget = QWidget()
-
-        # === Form layout ===
-        form_layout = QFormLayout()
-        self.signup_username = QLineEdit()
-        self.signup_email = QLineEdit()
-        self.signup_password = QLineEdit()
-        self.signup_password.setEchoMode(QLineEdit.Password)
-
-        signup_button = QPushButton("Sign Up")
-        switch_button = QPushButton("Switch to Login")
-        signup_button.clicked.connect(self.sign_up)
-        switch_button.clicked.connect(self.show_login)
-
-        form_layout.addRow("Username:", self.signup_username)
-        form_layout.addRow("Email:", self.signup_email)
-        form_layout.addRow("Password:", self.signup_password)
-        form_layout.addRow(signup_button)
-        form_layout.addRow(switch_button)
-
-        # === Wrap form in a widget so we can size-control it ===
-        form_widget = QWidget()
-        form_widget.setLayout(form_layout)
-        form_widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-
-        # === Vertical centering ===
-        vbox = QVBoxLayout()
-        vbox.addStretch(1)
-        vbox.addWidget(form_widget, alignment=Qt.AlignCenter)
-        vbox.addStretch(1)
-
-        # === Horizontal centering ===
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addLayout(vbox)
-        hbox.addStretch(1)
-
-        widget.setLayout(hbox)
-        return widget
-
-
-    def show_login(self):
-        self.stacked.setCurrentWidget(self.login_widget)
-
-    def show_signup(self):
-        self.stacked.setCurrentWidget(self.signup_widget)
-
     def login(self):
         email = self.login_email.text()
         password = self.login_password.text()
@@ -150,36 +101,35 @@ class LoginPage(QWidget):
         if not email or not password:
             QMessageBox.warning(self, "Validation Error", "Please enter both email and password.")
             return
-        result = db.validate_login(email=email,password=password)
+            
+        result = db.validate_login(email=email, password=password)
+        
         if result['success']:
-            QMessageBox.information(self, "Login", f"Logged in with email: {email}")
-            self.session_creation(result)
+            mode = result.get('mode', 'unknown')
+            msg = f"Logged in successfully via {mode.upper()} mode."
+            if mode == 'offline':
+                msg += "\n(Using locally cached credentials)"
+            
+            QMessageBox.information(self, "Login Success", msg)
+            self.session_creation(result['user'])
             self.main_window.go_to_home()
-
         else:
-            QMessageBox.information(self, "Login", f"Failed to Login.\n Password or email is incorrect")
+            QMessageBox.warning(self, "Login Failed", f"Error: {result.get('message', 'Unknown error')}")
 
-    def sign_up(self):
-        username = self.signup_username.text()
-        email = self.signup_email.text()
-        password = self.signup_password.text()
-
-        if not username or not email or not password:
-            QMessageBox.warning(self, "Validation Error", "Please fill in all fields.")
-            return
-
-        db.create_user(email=email, password=password,username=username) ## create the user
-        #TODO: how to handel errors  
-        QMessageBox.information(self, "Sign Up", f"Account created for {username}!")
-        self.show_login()
-    
     def session_creation(self, user_data):
         user = user_data
         cwd =  os.getcwd()
         file_path = os.path.join(cwd,'Sessions')
+        # Ensure directory exists just in case
+        os.makedirs(file_path, exist_ok=True)
+        
         file_name = os.path.join(file_path,'session.json')
+        # Wrap in a standard structure expected by main.py
+        data = {'user': user} 
+        
         with open(file_name,'w') as f:
-            json.dump(user,f)
+            json.dump(data, f, indent=4)
+
 
 
 

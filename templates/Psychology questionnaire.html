@@ -1,0 +1,330 @@
+<!--
+HTML template (with variables) for: "PSYCHOSOCIAL QUESTIONNAIRE" (Kessler K10)
+Source: :contentReference[oaicite:0]{index=0}
+
+- Matches the PDF layout: employee details at top, K10 frequency grid, score + signatures, explanatory notes.
+- Uses Handlebars-style variables: {{...}} and helper blocks like {{#if ...}} / (eq).
+  If you use Jinja2/EJS/etc., tell me and I’ll rewrite the conditionals.
+
+Suggested data keys:
+employee.full_name, employee.id_number, employee.occupation, employee.department
+responses.q1..responses.q10 in {"1","2","3","4","5"} (string or number ok)
+score (optional, otherwise you can calculate)
+sign.employee_signature, sign.employee_date, sign.ohnp_signature, sign.ohnp_date
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Psychosocial Questionnaire (K10)</title>
+  <style>
+    :root{
+      --ink:#111;
+      --grid:#000;
+      --muted:#333;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 12.5px;
+      --pad: 7px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:16mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .page{ margin:0; box-shadow:none; width:auto; min-height:auto; padding:14mm 12mm; }
+      .no-print{ display:none !important; }
+    }
+
+    .title{
+      font-weight:800;
+      font-size:18px;
+      margin:0 0 10px 0;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+
+    .meta{
+      font-size:var(--fs);
+      margin-bottom:10px;
+      line-height:1.35;
+    }
+    .line-field{
+      display:flex;
+      gap:8px;
+      align-items:flex-end;
+      margin:4px 0;
+    }
+    .line-field .lbl{ font-weight:700; white-space:nowrap; }
+    .line-field .line{
+      flex:1 1 auto;
+      border-bottom:1px solid #000;
+      min-height:18px;
+      padding:0 2px 2px 2px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:var(--fs);
+    }
+    .grid td, .grid th{
+      border:1px solid var(--grid);
+      padding:var(--pad);
+      vertical-align:middle;
+    }
+    .grid thead th{
+      font-weight:800;
+      text-align:center;
+    }
+    .qcol{ width:36%; font-weight:700; }
+    .opt{ width:12.8%; text-align:center; }
+
+    /* radio styling */
+    .r{
+      width:18px;
+      height:18px;
+      accent-color:#111;
+      transform:translateY(1px);
+    }
+
+    .score-row{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+      align-items:end;
+    }
+    .sigrow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+      margin-top:6px;
+      align-items:end;
+    }
+    .sigline{
+      border-bottom:1px solid #000;
+      min-height:18px;
+      padding:0 2px 2px 2px;
+    }
+    .sigpair{
+      display:grid;
+      grid-template-columns: auto 1fr;
+      gap:8px;
+      align-items:end;
+    }
+    .sigpair .lbl{ font-weight:700; white-space:nowrap; }
+
+    .info{
+      margin-top:12px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .info ul{
+      margin:6px 0 0 18px;
+      padding:0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="title">Psychosocial Questionnaire</div>
+
+    <!-- Employee details (top lines) -->
+    <div class="meta">
+      <div class="line-field">
+        <div class="lbl">Name and Surname of employee:</div>
+        <div class="line">{{employee.full_name}}</div>
+      </div>
+      <div class="line-field">
+        <div class="lbl">ID no:</div>
+        <div class="line">{{employee.id_number}}</div>
+      </div>
+      <div class="line-field">
+        <div class="lbl">Occupation:</div>
+        <div class="line">{{employee.occupation}}</div>
+      </div>
+      <div class="line-field">
+        <div class="lbl">Department:</div>
+        <div class="line">{{employee.department}}</div>
+      </div>
+    </div>
+
+    <!-- K10 grid -->
+    <table class="grid" aria-label="Kessler Psychological Distress Scale (K10)">
+      <thead>
+        <tr>
+          <th class="qcol">In the past 4 weeks how often did you feel like the following:</th>
+          <th class="opt">None of the times (1)</th>
+          <th class="opt">Little of the times (2)</th>
+          <th class="opt">Some of the times (3)</th>
+          <th class="opt">Most of the times (4)</th>
+          <th class="opt">All the times (5)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="qcol">1. About how often did you feel tired out for no good reason?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q1" value="1" {{#if (eq responses.q1 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q1" value="2" {{#if (eq responses.q1 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q1" value="3" {{#if (eq responses.q1 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q1" value="4" {{#if (eq responses.q1 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q1" value="5" {{#if (eq responses.q1 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">2. About how often did you feel nervous?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q2" value="1" {{#if (eq responses.q2 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q2" value="2" {{#if (eq responses.q2 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q2" value="3" {{#if (eq responses.q2 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q2" value="4" {{#if (eq responses.q2 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q2" value="5" {{#if (eq responses.q2 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">3. About how often did you feel so nervous that nothing could calm you down?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q3" value="1" {{#if (eq responses.q3 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q3" value="2" {{#if (eq responses.q3 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q3" value="3" {{#if (eq responses.q3 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q3" value="4" {{#if (eq responses.q3 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q3" value="5" {{#if (eq responses.q3 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">4. About how often did you feel hopeless?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q4" value="1" {{#if (eq responses.q4 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q4" value="2" {{#if (eq responses.q4 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q4" value="3" {{#if (eq responses.q4 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q4" value="4" {{#if (eq responses.q4 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q4" value="5" {{#if (eq responses.q4 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">5. About how often did you feel restless or fidgety?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q5" value="1" {{#if (eq responses.q5 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q5" value="2" {{#if (eq responses.q5 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q5" value="3" {{#if (eq responses.q5 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q5" value="4" {{#if (eq responses.q5 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q5" value="5" {{#if (eq responses.q5 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">6. About how often did you feel so restless you could not sit still?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q6" value="1" {{#if (eq responses.q6 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q6" value="2" {{#if (eq responses.q6 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q6" value="3" {{#if (eq responses.q6 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q6" value="4" {{#if (eq responses.q6 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q6" value="5" {{#if (eq responses.q6 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">7. About how often did you feel depressed?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q7" value="1" {{#if (eq responses.q7 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q7" value="2" {{#if (eq responses.q7 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q7" value="3" {{#if (eq responses.q7 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q7" value="4" {{#if (eq responses.q7 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q7" value="5" {{#if (eq responses.q7 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">8. About how often did you feel that everything was an effort?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q8" value="1" {{#if (eq responses.q8 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q8" value="2" {{#if (eq responses.q8 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q8" value="3" {{#if (eq responses.q8 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q8" value="4" {{#if (eq responses.q8 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q8" value="5" {{#if (eq responses.q8 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">9. About how often did you feel so sad that nothing could cheer you up?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q9" value="1" {{#if (eq responses.q9 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q9" value="2" {{#if (eq responses.q9 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q9" value="3" {{#if (eq responses.q9 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q9" value="4" {{#if (eq responses.q9 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q9" value="5" {{#if (eq responses.q9 "5")}}checked{{/if}} /></td>
+        </tr>
+
+        <tr>
+          <td class="qcol">10. About how often did you feel worthless?</td>
+          <td class="opt"><input class="r" type="radio" name="responses_q10" value="1" {{#if (eq responses.q10 "1")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q10" value="2" {{#if (eq responses.q10 "2")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q10" value="3" {{#if (eq responses.q10 "3")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q10" value="4" {{#if (eq responses.q10 "4")}}checked{{/if}} /></td>
+          <td class="opt"><input class="r" type="radio" name="responses_q10" value="5" {{#if (eq responses.q10 "5")}}checked{{/if}} /></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Score + signatures (as in the PDF) -->
+    <div class="score-row">
+      <div class="sigpair">
+        <div class="lbl">Score:</div>
+        <div class="sigline">{{score}}</div>
+      </div>
+      <div></div>
+    </div>
+
+    <div class="sigrow">
+      <div class="sigpair">
+        <div class="lbl">Employee Signature:</div>
+        <div class="sigline">{{sign.employee_signature}}</div>
+      </div>
+      <div class="sigpair">
+        <div class="lbl">Date:</div>
+        <div class="sigline">{{sign.employee_date}}</div>
+      </div>
+    </div>
+
+    <div class="sigrow">
+      <div class="sigpair">
+        <div class="lbl">OHNP Signature:</div>
+        <div class="sigline">{{sign.ohnp_signature}}</div>
+      </div>
+      <div class="sigpair">
+        <div class="lbl">Date:</div>
+        <div class="sigline">{{sign.ohnp_date}}</div>
+      </div>
+    </div>
+
+    <!-- Explanatory text (copied/structured from PDF) -->
+    <div class="info">
+      This is a questionnaire for patients to complete. It is a measure of psychological distress.
+      The numbers attached to the patient’s 10 responses are added up and the total score is the score on
+      the Kessler Psychological Distress Scale (K10). Scores will range from 10 to 50.
+      People seen in primary care who:
+      <ul>
+        <li>score under 20 are likely to be well</li>
+        <li>score 20–24 are likely to have a mild mental disorder</li>
+        <li>score 25–29 are likely to have moderate mental disorder</li>
+        <li>score 30 and over are likely to have a severe mental disorder</li>
+      </ul>
+    </div>
+
+    <!-- Metadata -->
+    <input type="hidden" name="template_name" value="psychosocial_questionnaire_k10" />
+    <input type="hidden" name="template_version" value="1.0" />
+
+    <div class="no-print" style="margin-top:10px; font-size:12px; color:#444;">
+      If you want, I can also provide a tiny scoring snippet for your backend (sum q1..q10) and auto-fill <b>Score</b>.
+    </div>
+  </div>
+</body>
+</html>

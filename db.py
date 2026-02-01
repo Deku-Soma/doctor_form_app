@@ -3,18 +3,36 @@ import os
 import bcrypt
 import base64
 import sqlite3
+import logging
+import sys
 from dotenv import load_dotenv
 from supabase import create_client
 from Utility.local_db import local_db
+from Utility.app_context import get_resource_path
 
-load_dotenv(dotenv_path=".env")  # Optional: give full path if needed
+# Setup logging
+log_path = os.path.join(os.getcwd(), 'app_debug.log')
+logging.basicConfig(filename=log_path, level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Load env from resource path
+env_path = get_resource_path(".env")
+logging.info(f"Loading .env from: {env_path}")
+load_dotenv(dotenv_path=env_path)
 
 url = os.getenv("SUPERBASE_URL")
 key = os.getenv("SUPERBASE_API_KEY")
 
 try:
+    if not url or not key:
+        logging.error("Supabase URL or Key missing from environment variables")
+        raise ValueError("Missing Supabase credentials")
+        
+    logging.info(f"Connecting to Supabase at: {url}")
     supabase = create_client(url, key)
+    logging.info("Supabase client initialized")
 except Exception as e:
+    logging.error(f"Supabase init failed: {e}")
     print(f"Supabase init failed (offline?): {e}")
     supabase = None
 
@@ -36,18 +54,67 @@ def create_user(email: str, password: str, username: str = "") -> dict:
 
 
 def validate_login(email: str, password: str) -> dict:
-    if not supabase:
-        return {"success": False, "message": "Offline - Login not available"}
-        
-    result = supabase.table("users").select("*").eq("user_email", email).execute()
-    if not result.data:
-        return {"success": False, "message": "Email not found"}
+    # 1. Try Online Login (Supabase)
+    if supabase:
+        try:
+            print("Attempting Online Login...")
+            logging.info(f"Attempting online login for: {email}")
+            result = supabase.table("users").select("*").eq("user_email", email).execute()
+            
+            if result.data:
+                user = result.data[0]
+                # Verify password against cloud hash
+                if bcrypt.checkpw(password.encode(), user["user_password"].encode()):
+                    # Success: Cache to local DB
+                    # Map Supabase fields to Local keys if needed, assuming one-to-one for now based on previous code
+                    # The local_db.upsert_user expects: id, email, password_hash, role
+                    # The custom table has: user_email, user_password, user_role (presumably, code said 'user_role': 'Regular')
+                    # We need a UUID. The existing code didn't show an ID column in the insert, 
+                    # but Supabase tables usually have an 'id'. Let's assume 'id' exists or use email as fallback for ID if missing 
+                    # (though UUID is better).
+                    
+                    user_id = user.get("id") or user.get("user_id") # Handle potential column naming
+                    # If we truly don't have an ID, we might have issues. But let's assume standard Supabase row.
+                    
+                    local_user_data = {
+                        "id": str(user_id) if user_id else email, # Fallback to email if no ID found to prevent crash
+                        "email": user["user_email"],
+                        "password_hash": user["user_password"],
+                        "role": user.get("user_role", "user")
+                    }
+                    local_db.upsert_user(local_user_data)
+                    return {"success": True, "user": user, "mode": "online"}
+                else:
+                    return {"success": False, "message": "Incorrect password"}
+            else:
+                # Email not found online, check if it's a first time wrong email or just not there
+                pass 
+                # Fall through to check offline? 
+                # No, if we are online and email doesn't exist, it doesn't exist.
+                # UNLESS we are "online" but the user was created offline? 
+                # But requirement says "Admin-Only Provisioning" so users exist on cloud first.
+                return {"success": False, "message": "Email not found (Online)"}
 
-    user = result.data[0]
-    if bcrypt.checkpw(password.encode(), user["user_password"].encode()):
-        return {"success": True, "user": user}
+        except Exception as e:
+            msg = f"Online login failed (connection issue?): {e}"
+            print(msg)
+            logging.error(msg)
+            # Fall through to offline handling
+    
+    # 2. Offline Fallback
+    print("Attempting Offline Login...")
+    logging.info("Attempting offline login...")
+    local_user = local_db.get_user_by_email(email)
+    
+    if local_user:
+        # Verify password against cached hash
+        stored_hash = local_user["password_hash"]
+        if bcrypt.checkpw(password.encode(), stored_hash.encode()):
+             return {"success": True, "user": local_user, "mode": "offline"}
+        else:
+             return {"success": False, "message": "Incorrect password (Offline)"}
     else:
-        return {"success": False, "message": "Incorrect password"}
+        return {"success": False, "message": "Login failed. If this is a new device, you must be online for the first login."}
     
 
 

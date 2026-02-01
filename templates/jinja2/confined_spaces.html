@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confined Spaces Questionnaire</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        td {
+            border: 1px solid #000;
+            padding: 6px;
+        }
+
+        .label {
+            font-weight: bold;
+            width: 70%;
+        }
+
+        .signature-box {
+            min-height: 120px;
+            padding: 5px;
+        }
+
+        .signature-box img {
+            max-height: 110px;
+            max-width: 100%;
+        }
+
+        .logo-header {
+            text-align: left;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #163b4d;
+        }
+
+        .logo-header img {
+            max-height: 96px;
+            max-width: 360px;
+        }
+    </style>
+</head>
+
+<body>
+    {% if logo_data_uri %}
+    <div class="logo-header">
+        <img src="{{ logo_data_uri }}" alt="Logo">
+    </div>
+    {% endif %}
+
+    <h1>CONFINED SPACES QUESTIONNAIRE FOR EMPLOYEES</h1>
+
+    <table>
+        <tr>
+            <td class="label">Full Name & Surname:</td>
+            <td>{{ full_name_surname }}</td>
+        </tr>
+        <tr>
+            <td class="label">ID Number:</td>
+            <td>{{ id_number }}</td>
+        </tr>
+        <tr>
+            <td class="label">Company:</td>
+            <td>{{ company }}</td>
+        </tr>
+        <tr>
+            <td class="label">Site/Store:</td>
+            <td>{{ site_store }}</td>
+        </tr>
+        <tr>
+            <td class="label">Occupation:</td>
+            <td>{{ occupation }}</td>
+        </tr>
+        <tr>
+            <td class="label">Date:</td>
+            <td>{{ date }}</td>
+        </tr>
+    </table>
+
+    <h3>Questions (Yes/No)</h3>
+    <table>
+        {% for key, value in [
+        ('q1_confined_space_definition', 'Know what qualifies as confined space?'),
+        ('q1_assigned_before', 'Ever assigned to work in confined space?'),
+        ('q1_understand_hazards', 'Understand potential hazards?'),
+        ('q1_trained_safety_procedures', 'Trained in safety procedures?'),
+        ('q2_oxygen_deficiency', 'Aware of oxygen deficiency hazard?'),
+        ('q2_flammable_explosive', 'Aware of flammable/explosive atmosphere?'),
+        ('q2_toxic_gases', 'Aware of toxic gases?'),
+        ('q2_physical_hazards', 'Aware of physical hazards?'),
+        ('q2_water_flooding', 'Aware of water/flooding hazard?'),
+        ('q2_temperature_extremes', 'Aware of temperature extremes?'),
+        ('q2_limited_egress', 'Aware of limited egress hazard?'),
+        ('q3_emergency_evac_procedures', 'Familiar with emergency evacuation?'),
+        ('q3_entry_permit_location_sign', 'Know entry permit location?'),
+        ('q3_operate_ppe', 'Know how to operate PPE?'),
+        ('q3_rescue_training', 'Received rescue training?'),
+        ('q3_procedure_if_hazard', 'Know procedure if hazard encountered?'),
+        ('q4_air_monitoring_importance', 'Aware of air monitoring importance?'),
+        ('q4_trained_gas_detection', 'Trained in gas detection?'),
+        ('q4_wear_appropriate_ppe', 'Wear appropriate PPE?'),
+        ('q5_medical_conditions_affect', 'Any medical conditions affecting ability?'),
+        ('q5_health_monitoring_awareness', 'Aware of health monitoring procedures?'),
+        ('q5_feel_fit', 'Feel physically fit?'),
+        ('q6_understand_risks', 'Understand risks and safety importance?'),
+        ('q6_comfortable_asking', 'Comfortable asking for assistance?'),
+        ('q6_ack_follow_procedures', 'Acknowledge must follow procedures?')
+        ] %}
+        <tr>
+            <td class="label">{{ value }}</td>
+            <td>{{ get(key, '') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>Additional Comments</h3>
+    <div style="border: 1px solid #000; padding: 10px; min-height: 120px;">{{ additional_comments }}</div>
+
+    <h3>Signature</h3>
+    <table>
+        <tr>
+            <td class="label">Signature:</td>
+            <td>
+                <div class="signature-box">
+                    {% if signature_data_base64 %}
+                    <img src="{{ signature_data_base64 }}" alt="Signature" />
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="label">Date:</td>
+            <td>{{ signature_date }}</td>
+        </tr>
+    </table>
+
+    <!-- Stamps Footer -->
+    <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;">
+        {% if stamp1_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp1_data_uri }}" alt="Dr. Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+        {% if stamp2_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp2_data_uri }}" alt="Company Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,201 @@
+<!--
+HTML template (with variables) for: "Vitamin B consent form.xlsx"
+Source: :contentReference[oaicite:0]{index=0}
+
+Templating:
+- Uses Handlebars-style variables: {{var}} and loops: {{#each ...}}
+- If you use Jinja2/EJS/Liquid, tell me and I’ll rewrite the syntax.
+
+Suggested data shape:
+{
+  "date": "12 May 2025",
+  "company": "Home Remitt",
+  "consent_text": "I hereby consent ...",
+  "entries": [
+    { "no": 1, "name_surname": "", "id_number": "", "signature_text": "", "signature_img": "" },
+    ...
+    { "no": 50, ... }
+  ]
+}
+
+Signature options per row:
+- signature_img: base64 PNG (no prefix) -> rendered as an image
+- signature_text: fallback typed signature
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vitamin B12 Consent Form</title>
+  <style>
+    :root{
+      --ink:#111;
+      --grid:#000;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 12.5px;
+      --pad: 8px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    /* A4 page */
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:16mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .page{ margin:0; box-shadow:none; width:auto; min-height:auto; padding:14mm 12mm; }
+      .no-print{ display:none !important; }
+    }
+
+    .topbar{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      font-size:var(--fs);
+      margin-bottom:10px;
+      align-items:end;
+    }
+
+    .line-field{
+      display:flex;
+      gap:8px;
+      align-items:flex-end;
+    }
+    .lbl{
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .line{
+      flex:1 1 auto;
+      border-bottom:1px solid var(--grid);
+      min-height:18px;
+      padding:0 2px 2px 2px;
+    }
+
+    .consent{
+      font-size:var(--fs);
+      line-height:1.35;
+      white-space:pre-wrap; /* keeps line breaks like the sheet cell */
+      margin:10px 0 14px 0;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:var(--fs);
+    }
+    .grid td, .grid th{
+      border:1px solid var(--grid);
+      padding:var(--pad);
+      vertical-align:middle;
+    }
+    .grid th{
+      font-weight:700;
+      text-align:left;
+    }
+
+    .col-no{ width:8%; text-align:center; font-weight:700; }
+    .col-name{ width:42%; }
+    .col-id{ width:25%; }
+    .col-sig{ width:25%; }
+
+    .sigbox{
+      min-height:26px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .sigbox img{
+      max-height:34px;
+      max-width:100%;
+      object-fit:contain;
+      display:block;
+    }
+    .muted{
+      color:#444;
+      font-size:12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- Date + Company (top row like the sheet) -->
+    <div class="topbar">
+      <div class="line-field">
+        <div class="lbl">Date:</div>
+        <div class="line">{{date}}</div>
+      </div>
+      <div class="line-field">
+        <div class="lbl">Company:</div>
+        <div class="line">{{company}}</div>
+      </div>
+    </div>
+
+    <!-- Consent paragraph (cell A1 content) -->
+    <div class="consent">
+{{#if consent_text}}{{consent_text}}{{else}}
+I hereby consent to receive the Vitamin B12 injection. I acknowledge that I have had the opportunity to ask questions or request further information before proceeding.
+I agree that YGAM11 t/a Complete Wellbeing will not be held liable for any adverse effects or complications that may arise as a result of taking the Vitamin B12 injection.
+By signing below, I give my consent to receive this injection as per the above terms.
+{{/if}}
+    </div>
+
+    <!-- Roster table (1–50) -->
+    <table class="grid" aria-label="Vitamin B12 consent sign-off list">
+      <thead>
+        <tr>
+          <th class="col-no"></th>
+          <th class="col-name">Name &amp; Surname</th>
+          <th class="col-id">ID Number</th>
+          <th class="col-sig">Signature</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each entries}}
+        <tr>
+          <td class="col-no">{{no}}</td>
+          <td class="col-name">{{name_surname}}</td>
+          <td class="col-id">{{id_number}}</td>
+          <td class="col-sig">
+            <div class="sigbox">
+              {{#if signature_img}}
+                <img alt="Signature" src="data:image/png;base64,{{signature_img}}" />
+              {{else}}
+                {{signature_text}}
+              {{/if}}
+            </div>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <div class="no-print muted" style="margin-top:10px;">
+      Tip: For a consistent 1–50 list, build <code>entries</code> as a 50-item array on your backend (with <code>no: 1..50</code>),
+      then fill name/id/signature where applicable.
+    </div>
+
+    <!-- Metadata -->
+    <input type="hidden" name="template_name" value="vitamin_b12_consent_form" />
+    <input type="hidden" name="template_version" value="1.0" />
+
+  </div>
+</body>
+</html>

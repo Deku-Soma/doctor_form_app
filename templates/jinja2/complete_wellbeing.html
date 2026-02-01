@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Wellbeing - Medical Test Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;\n            
+            padding: 40px;
+        }
+
+        h2 {
+            color: #1f5fa4;
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+
+        td {
+            border: 1px solid #000;
+            padding: 6px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 40px;
+            color: #1f5fa4;
+        }
+
+        .comments {
+            min-height: 120px;
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .signature {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 40%;
+            min-height: 120px;
+            border: 1px solid #000;
+            padding: 5px;
+        }
+
+        .signature-box img {
+            max-height: 110px;
+            max-width: 100%;
+        }
+
+        .logo-header {
+            text-align: left;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #163b4d;
+        }
+
+        .logo-header img {
+            max-height: 96px;
+            max-width: 360px;
+        }
+    </style>
+</head>
+
+<body>
+    {% if logo_data_uri %}
+    <div class="logo-header">
+        <img src="{{ logo_data_uri }}" alt="Logo">
+    </div>
+    {% endif %}
+
+    <div style="text-align: center;">
+        <h1>COMPLETE WELLBEING</h1>
+        <p>"CORPORATE WELLNESS SOLUTIONS"</p>
+        <p>377 RIVONIA BOULEVARD, SANDTON, JOHANNESBURG</p>
+        <p>Email: info@completewellbeing.co.za | Tel: 087 821 6449 | Mobile: 062 969 9901</p>
+        <p>Website: www.completewellbeing.co.za</p>
+    </div>
+
+    <h2>Medical Test Results</h2>
+    <table>
+        <tr>
+            <td>Name:</td>
+            <td>{{ name }}</td>
+        </tr>
+        <tr>
+            <td>Surname:</td>
+            <td>{{ surname }}</td>
+        </tr>
+        <tr>
+            <td>ID Number:</td>
+            <td>{{ id_number }}</td>
+        </tr>
+        <tr>
+            <td>Employer:</td>
+            <td>{{ employer }}</td>
+        </tr>
+        <tr>
+            <td>Job Title:</td>
+            <td>{{ job_title }}</td>
+        </tr>
+        <tr>
+            <td>Examination Date:</td>
+            <td>{{ exam_date }}</td>
+        </tr>
+    </table>
+
+    <h2>Tests Conducted</h2>
+    <table>
+        <tr>
+            <td>Glucose:</td>
+            <td>{{ glucose }}</td>
+        </tr>
+        <tr>
+            <td>Cholesterol:</td>
+            <td>{{ cholesterol }}</td>
+        </tr>
+        <tr>
+            <td>Blood Pressure:</td>
+            <td>{{ blood_pressure }}</td>
+        </tr>
+        <tr>
+            <td>Weight:</td>
+            <td>{{ weight }}</td>
+        </tr>
+        <tr>
+            <td>Height:</td>
+            <td>{{ height }}</td>
+        </tr>
+        <tr>
+            <td>Audiometry:</td>
+            <td>{{ audiometry }}</td>
+        </tr>
+        <tr>
+            <td>Urine Analysis:</td>
+            <td>{{ urine_analysis }}</td>
+        </tr>
+        <tr>
+            <td>Lung Function:</td>
+            <td>{{ lung_function }}</td>
+        </tr>
+        <tr>
+            <td>Vision:</td>
+            <td>{{ vision }}</td>
+        </tr>
+        <tr>
+            <td>Working at heights:</td>
+            <td>{{ working_at_heights }}</td>
+        </tr>
+        <tr>
+            <td>Hot/Cold Environments Questionnaire:</td>
+            <td>{{ environment_questionnaire }}</td>
+        </tr>
+        <tr>
+            <td>Psycho-social Questionnaire:</td>
+            <td>{{ psychosocial_questionnaire }}</td>
+        </tr>
+        <tr>
+            <td>Musculoskeletal Questionnaire:</td>
+            <td>{{ musculoskeletal_questionnaire }}</td>
+        </tr>
+    </table>
+
+    <div>Comments/Notes:</div>
+    <div class="comments">{{ comments }}</div>
+
+    <div class="signature">
+        <div class="signature-box">
+            <div>Employee:</div>
+            {% if signature_base64_base64 %}
+            <img src="{{ signature_base64_base64 }}" alt="Signature" />
+            {% else %}
+            <div style="margin-top: 20px;">(No signature provided)</div>
+            {% endif %}
+        </div>
+        <div class="signature-box">
+            <div>Examiner:</div>
+        </div>
+    </div>
+
+    <!-- Stamps Footer -->
+    <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;">
+        {% if stamp1_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp1_data_uri }}" alt="Dr. Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+        {% if stamp2_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp2_data_uri }}" alt="Company Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+    </div>
+
+</body>
+
+</html>

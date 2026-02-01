@@ -1,1 +1,10 @@
-{"success": true, "user": {"user_id": 1, "user_email": "sashinsamlal@gmail.com", "user_password": "$2b$12$pROPlJsj3jkLeEU7nmxqcO6zDkHbYwcdVmYHcPsyrDpxC28ffoKF6", "user_role": "Regular", "user_name": "sashin"}}
+{
+    "user": {
+        "id": "2ae67d83-cf80-4a0c-bc01-545d8bfb41da",
+        "created_at": "2026-01-09T20:21:52.484944+00:00",
+        "user_email": "admin@example.com",
+        "user_password": "$2b$12$h7AcRq5w4IasoRGCO3VAfOXbkr5qU19lPHJ0pWP2dCPB5JocATWti",
+        "user_name": "Super Admin",
+        "user_role": "admin"
+    }
+}

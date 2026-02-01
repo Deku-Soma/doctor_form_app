@@ -1,0 +1,434 @@
+<!--
+HTML template (with variables) for: "MUSCOLOSKELETAL QUESTIONNAIRE"
+Source: :contentReference[oaicite:0]{index=0}
+
+- Matches the layout: header fields, symptom-by-body-part grid, comments box, signatures + dates.
+- Uses Handlebars-style variables: {{...}} and {{#if ...}} blocks.
+  If you use Jinja2/EJS/etc., swap syntax accordingly.
+
+Suggested data keys:
+employee.full_name, employee.id_number, employee.occupation, employee.department,
+grid[bodyPartKey][symptomKey] -> "Yes" | "No" | "" (blank),
+comments,
+sign.employee_signature, sign.employee_date,
+sign.ohnp_signature, sign.ohnp_date
+
+Body-part keys used below:
+neck, shoulder, upper_body, elbows, wrist_hands, lower_body, hips_thighs, knees, ankles, feet
+
+Symptom keys:
+pain, aches, discomfort, numbness, stiffness, swelling
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Musculoskeletal Questionnaire</title>
+  <style>
+    :root{
+      --ink:#111;
+      --grid:#000;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 12.5px;
+      --pad: 7px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    /* A4 page */
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:16mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .page{ margin:0; box-shadow:none; width:auto; min-height:auto; padding:14mm 12mm; }
+      .no-print{ display:none !important; }
+    }
+
+    .title{
+      font-weight:800;
+      font-size:15px;
+      margin:0 0 10px 0;
+      text-transform:uppercase;
+    }
+
+    .meta{
+      margin:0 0 10px 0;
+      font-size:var(--fs);
+      line-height:1.35;
+    }
+
+    .line-field{
+      display:flex;
+      gap:8px;
+      align-items:flex-end;
+      margin:4px 0;
+    }
+    .line-field .lbl{
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .line-field .line{
+      flex:1 1 auto;
+      border-bottom:1px solid #000;
+      min-height:18px;
+      padding:0 2px 2px 2px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:var(--fs);
+    }
+    .grid td, .grid th{
+      border:1px solid var(--grid);
+      padding:var(--pad);
+      vertical-align:middle;
+    }
+    .grid th{
+      font-weight:800;
+      text-transform:uppercase;
+      text-align:center;
+    }
+
+    .bp-col{ width:22%; font-weight:700; text-transform:none; text-align:left; }
+    .sym-col{ width:13%; text-align:center; }
+
+    .prompt{
+      font-size:12px;
+      margin:6px 0 8px 0;
+    }
+
+    /* Compact select that looks like a blank cell until chosen */
+    select.cell{
+      width:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      font-family:var(--font);
+      font-size:var(--fs);
+      text-align:center;
+      appearance:none;              /* keep clean look */
+      -webkit-appearance:none;
+      -moz-appearance:none;
+    }
+    /* Add a subtle dropdown indicator only on screen (optional) */
+    @media screen{
+      select.cell{
+        background-image: linear-gradient(45deg, transparent 50%, #555 50%),
+                          linear-gradient(135deg, #555 50%, transparent 50%);
+        background-position: calc(100% - 10px) 55%, calc(100% - 5px) 55%;
+        background-size: 5px 5px, 5px 5px;
+        background-repeat:no-repeat;
+        padding-right:18px;
+      }
+    }
+
+    .comments-box{
+      border:1px solid #000;
+      height:140px;
+      padding:8px;
+      margin-top:10px;
+    }
+    textarea{
+      width:100%;
+      height:100%;
+      border:0;
+      outline:none;
+      resize:none;
+      font-family:var(--font);
+      font-size:var(--fs);
+      background:transparent;
+    }
+
+    .sign-row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+      margin-top:12px;
+      font-size:var(--fs);
+    }
+    .sigline{
+      border-bottom:1px solid #000;
+      min-height:18px;
+      padding:0 2px 2px 2px;
+    }
+    .sig-block{
+      display:grid;
+      grid-template-columns: auto 1fr;
+      gap:8px;
+      align-items:end;
+      margin:8px 0 0 0;
+    }
+    .sig-block .lbl{ font-weight:700; white-space:nowrap; }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="title">Musculoskeletal Questionnaire</div>
+
+    <!-- Header fields (match the PDF lines) -->
+    <div class="meta">
+      <div class="line-field">
+        <div class="lbl">Name and Surname of employee:</div>
+        <div class="line">{{employee.full_name}}</div>
+      </div>
+      <div class="line-field">
+        <div class="lbl">ID no.:</div>
+        <div class="line">{{employee.id_number}}</div>
+      </div>
+      <div class="line-field">
+        <div class="lbl">Occupation:</div>
+        <div class="line">{{employee.occupation}}</div>
+      </div>
+      <div class="line-field">
+        <div class="lbl">Department:</div>
+        <div class="line">{{employee.department}}</div>
+      </div>
+    </div>
+
+    <div class="prompt">
+      <b>Have you at any time during the last 12 months had trouble with the following</b>
+      (please mark <b>Yes</b>/<b>No</b> for each body part)
+    </div>
+
+    <!-- Main grid -->
+    <table class="grid" aria-label="Musculoskeletal symptom grid">
+      <thead>
+        <tr>
+          <th class="bp-col"></th>
+          <th class="sym-col">Pain</th>
+          <th class="sym-col">Aches</th>
+          <th class="sym-col">Discomfort</th>
+          <th class="sym-col">Numbness</th>
+          <th class="sym-col">Stiffness</th>
+          <th class="sym-col">Swelling</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Helper: each cell is a Yes/No/blank select -->
+        <tr>
+          <td class="bp-col">Neck</td>
+          <td class="sym-col">
+            <select class="cell" name="grid_neck_pain">
+              <option value="" {{#if (eq grid.neck.pain "")}}selected{{/if}}></option>
+              <option value="Yes" {{#if (eq grid.neck.pain "Yes")}}selected{{/if}}>Yes</option>
+              <option value="No"  {{#if (eq grid.neck.pain "No")}}selected{{/if}}>No</option>
+            </select>
+          </td>
+          <td class="sym-col">
+            <select class="cell" name="grid_neck_aches">
+              <option value="" {{#if (eq grid.neck.aches "")}}selected{{/if}}></option>
+              <option value="Yes" {{#if (eq grid.neck.aches "Yes")}}selected{{/if}}>Yes</option>
+              <option value="No"  {{#if (eq grid.neck.aches "No")}}selected{{/if}}>No</option>
+            </select>
+          </td>
+          <td class="sym-col">
+            <select class="cell" name="grid_neck_discomfort">
+              <option value="" {{#if (eq grid.neck.discomfort "")}}selected{{/if}}></option>
+              <option value="Yes" {{#if (eq grid.neck.discomfort "Yes")}}selected{{/if}}>Yes</option>
+              <option value="No"  {{#if (eq grid.neck.discomfort "No")}}selected{{/if}}>No</option>
+            </select>
+          </td>
+          <td class="sym-col">
+            <select class="cell" name="grid_neck_numbness">
+              <option value="" {{#if (eq grid.neck.numbness "")}}selected{{/if}}></option>
+              <option value="Yes" {{#if (eq grid.neck.numbness "Yes")}}selected{{/if}}>Yes</option>
+              <option value="No"  {{#if (eq grid.neck.numbness "No")}}selected{{/if}}>No</option>
+            </select>
+          </td>
+          <td class="sym-col">
+            <select class="cell" name="grid_neck_stiffness">
+              <option value="" {{#if (eq grid.neck.stiffness "")}}selected{{/if}}></option>
+              <option value="Yes" {{#if (eq grid.neck.stiffness "Yes")}}selected{{/if}}>Yes</option>
+              <option value="No"  {{#if (eq grid.neck.stiffness "No")}}selected{{/if}}>No</option>
+            </select>
+          </td>
+          <td class="sym-col">
+            <select class="cell" name="grid_neck_swelling">
+              <option value="" {{#if (eq grid.neck.swelling "")}}selected{{/if}}></option>
+              <option value="Yes" {{#if (eq grid.neck.swelling "Yes")}}selected{{/if}}>Yes</option>
+              <option value="No"  {{#if (eq grid.neck.swelling "No")}}selected{{/if}}>No</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Shoulder</td>
+          <td class="sym-col"><select class="cell" name="grid_shoulder_pain">
+            <option value="" {{#if (eq grid.shoulder.pain "")}}selected{{/if}}></option>
+            <option value="Yes" {{#if (eq grid.shoulder.pain "Yes")}}selected{{/if}}>Yes</option>
+            <option value="No"  {{#if (eq grid.shoulder.pain "No")}}selected{{/if}}>No</option>
+          </select></td>
+          <td class="sym-col"><select class="cell" name="grid_shoulder_aches">
+            <option value="" {{#if (eq grid.shoulder.aches "")}}selected{{/if}}></option>
+            <option value="Yes" {{#if (eq grid.shoulder.aches "Yes")}}selected{{/if}}>Yes</option>
+            <option value="No"  {{#if (eq grid.shoulder.aches "No")}}selected{{/if}}>No</option>
+          </select></td>
+          <td class="sym-col"><select class="cell" name="grid_shoulder_discomfort">
+            <option value="" {{#if (eq grid.shoulder.discomfort "")}}selected{{/if}}></option>
+            <option value="Yes" {{#if (eq grid.shoulder.discomfort "Yes")}}selected{{/if}}>Yes</option>
+            <option value="No"  {{#if (eq grid.shoulder.discomfort "No")}}selected{{/if}}>No</option>
+          </select></td>
+          <td class="sym-col"><select class="cell" name="grid_shoulder_numbness">
+            <option value="" {{#if (eq grid.shoulder.numbness "")}}selected{{/if}}></option>
+            <option value="Yes" {{#if (eq grid.shoulder.numbness "Yes")}}selected{{/if}}>Yes</option>
+            <option value="No"  {{#if (eq grid.shoulder.numbness "No")}}selected{{/if}}>No</option>
+          </select></td>
+          <td class="sym-col"><select class="cell" name="grid_shoulder_stiffness">
+            <option value="" {{#if (eq grid.shoulder.stiffness "")}}selected{{/if}}></option>
+            <option value="Yes" {{#if (eq grid.shoulder.stiffness "Yes")}}selected{{/if}}>Yes</option>
+            <option value="No"  {{#if (eq grid.shoulder.stiffness "No")}}selected{{/if}}>No</option>
+          </select></td>
+          <td class="sym-col"><select class="cell" name="grid_shoulder_swelling">
+            <option value="" {{#if (eq grid.shoulder.swelling "")}}selected{{/if}}></option>
+            <option value="Yes" {{#if (eq grid.shoulder.swelling "Yes")}}selected{{/if}}>Yes</option>
+            <option value="No"  {{#if (eq grid.shoulder.swelling "No")}}selected{{/if}}>No</option>
+          </select></td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Upper body</td>
+          <td class="sym-col"><select class="cell" name="grid_upper_body_pain"><option value="" {{#if (eq grid.upper_body.pain "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.upper_body.pain "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.upper_body.pain "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_upper_body_aches"><option value="" {{#if (eq grid.upper_body.aches "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.upper_body.aches "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.upper_body.aches "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_upper_body_discomfort"><option value="" {{#if (eq grid.upper_body.discomfort "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.upper_body.discomfort "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.upper_body.discomfort "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_upper_body_numbness"><option value="" {{#if (eq grid.upper_body.numbness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.upper_body.numbness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.upper_body.numbness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_upper_body_stiffness"><option value="" {{#if (eq grid.upper_body.stiffness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.upper_body.stiffness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.upper_body.stiffness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_upper_body_swelling"><option value="" {{#if (eq grid.upper_body.swelling "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.upper_body.swelling "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.upper_body.swelling "No")}}selected{{/if}}>No</option></select></td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Elbows</td>
+          <td class="sym-col"><select class="cell" name="grid_elbows_pain"><option value="" {{#if (eq grid.elbows.pain "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.elbows.pain "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.elbows.pain "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_elbows_aches"><option value="" {{#if (eq grid.elbows.aches "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.elbows.aches "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.elbows.aches "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_elbows_discomfort"><option value="" {{#if (eq grid.elbows.discomfort "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.elbows.discomfort "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.elbows.discomfort "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_elbows_numbness"><option value="" {{#if (eq grid.elbows.numbness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.elbows.numbness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.elbows.numbness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_elbows_stiffness"><option value="" {{#if (eq grid.elbows.stiffness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.elbows.stiffness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.elbows.stiffness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_elbows_swelling"><option value="" {{#if (eq grid.elbows.swelling "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.elbows.swelling "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.elbows.swelling "No")}}selected{{/if}}>No</option></select></td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Wrist/hands</td>
+          <td class="sym-col"><select class="cell" name="grid_wrist_hands_pain"><option value="" {{#if (eq grid.wrist_hands.pain "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.wrist_hands.pain "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.wrist_hands.pain "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_wrist_hands_aches"><option value="" {{#if (eq grid.wrist_hands.aches "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.wrist_hands.aches "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.wrist_hands.aches "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_wrist_hands_discomfort"><option value="" {{#if (eq grid.wrist_hands.discomfort "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.wrist_hands.discomfort "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.wrist_hands.discomfort "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_wrist_hands_numbness"><option value="" {{#if (eq grid.wrist_hands.numbness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.wrist_hands.numbness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.wrist_hands.numbness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_wrist_hands_stiffness"><option value="" {{#if (eq grid.wrist_hands.stiffness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.wrist_hands.stiffness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.wrist_hands.stiffness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_wrist_hands_swelling"><option value="" {{#if (eq grid.wrist_hands.swelling "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.wrist_hands.swelling "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.wrist_hands.swelling "No")}}selected{{/if}}>No</option></select></td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Lower body</td>
+          <td class="sym-col"><select class="cell" name="grid_lower_body_pain"><option value="" {{#if (eq grid.lower_body.pain "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.lower_body.pain "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.lower_body.pain "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_lower_body_aches"><option value="" {{#if (eq grid.lower_body.aches "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.lower_body.aches "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.lower_body.aches "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_lower_body_discomfort"><option value="" {{#if (eq grid.lower_body.discomfort "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.lower_body.discomfort "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.lower_body.discomfort "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_lower_body_numbness"><option value="" {{#if (eq grid.lower_body.numbness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.lower_body.numbness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.lower_body.numbness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_lower_body_stiffness"><option value="" {{#if (eq grid.lower_body.stiffness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.lower_body.stiffness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.lower_body.stiffness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_lower_body_swelling"><option value="" {{#if (eq grid.lower_body.swelling "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.lower_body.swelling "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.lower_body.swelling "No")}}selected{{/if}}>No</option></select></td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Hips/thighs</td>
+          <td class="sym-col"><select class="cell" name="grid_hips_thighs_pain"><option value="" {{#if (eq grid.hips_thighs.pain "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.hips_thighs.pain "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.hips_thighs.pain "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_hips_thighs_aches"><option value="" {{#if (eq grid.hips_thighs.aches "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.hips_thighs.aches "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.hips_thighs.aches "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_hips_thighs_discomfort"><option value="" {{#if (eq grid.hips_thighs.discomfort "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.hips_thighs.discomfort "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.hips_thighs.discomfort "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_hips_thighs_numbness"><option value="" {{#if (eq grid.hips_thighs.numbness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.hips_thighs.numbness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.hips_thighs.numbness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_hips_thighs_stiffness"><option value="" {{#if (eq grid.hips_thighs.stiffness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.hips_thighs.stiffness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.hips_thighs.stiffness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_hips_thighs_swelling"><option value="" {{#if (eq grid.hips_thighs.swelling "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.hips_thighs.swelling "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.hips_thighs.swelling "No")}}selected{{/if}}>No</option></select></td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Knees</td>
+          <td class="sym-col"><select class="cell" name="grid_knees_pain"><option value="" {{#if (eq grid.knees.pain "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.knees.pain "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.knees.pain "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_knees_aches"><option value="" {{#if (eq grid.knees.aches "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.knees.aches "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.knees.aches "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_knees_discomfort"><option value="" {{#if (eq grid.knees.discomfort "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.knees.discomfort "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.knees.discomfort "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_knees_numbness"><option value="" {{#if (eq grid.knees.numbness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.knees.numbness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.knees.numbness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_knees_stiffness"><option value="" {{#if (eq grid.knees.stiffness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.knees.stiffness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.knees.stiffness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_knees_swelling"><option value="" {{#if (eq grid.knees.swelling "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.knees.swelling "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.knees.swelling "No")}}selected{{/if}}>No</option></select></td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Ankles</td>
+          <td class="sym-col"><select class="cell" name="grid_ankles_pain"><option value="" {{#if (eq grid.ankles.pain "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.ankles.pain "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.ankles.pain "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_ankles_aches"><option value="" {{#if (eq grid.ankles.aches "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.ankles.aches "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.ankles.aches "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_ankles_discomfort"><option value="" {{#if (eq grid.ankles.discomfort "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.ankles.discomfort "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.ankles.discomfort "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_ankles_numbness"><option value="" {{#if (eq grid.ankles.numbness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.ankles.numbness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.ankles.numbness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_ankles_stiffness"><option value="" {{#if (eq grid.ankles.stiffness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.ankles.stiffness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.ankles.stiffness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_ankles_swelling"><option value="" {{#if (eq grid.ankles.swelling "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.ankles.swelling "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.ankles.swelling "No")}}selected{{/if}}>No</option></select></td>
+        </tr>
+
+        <tr>
+          <td class="bp-col">Feet</td>
+          <td class="sym-col"><select class="cell" name="grid_feet_pain"><option value="" {{#if (eq grid.feet.pain "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.feet.pain "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.feet.pain "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_feet_aches"><option value="" {{#if (eq grid.feet.aches "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.feet.aches "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.feet.aches "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_feet_discomfort"><option value="" {{#if (eq grid.feet.discomfort "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.feet.discomfort "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.feet.discomfort "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_feet_numbness"><option value="" {{#if (eq grid.feet.numbness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.feet.numbness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.feet.numbness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_feet_stiffness"><option value="" {{#if (eq grid.feet.stiffness "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.feet.stiffness "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.feet.stiffness "No")}}selected{{/if}}>No</option></select></td>
+          <td class="sym-col"><select class="cell" name="grid_feet_swelling"><option value="" {{#if (eq grid.feet.swelling "")}}selected{{/if}}></option><option value="Yes" {{#if (eq grid.feet.swelling "Yes")}}selected{{/if}}>Yes</option><option value="No" {{#if (eq grid.feet.swelling "No")}}selected{{/if}}>No</option></select></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Comments -->
+    <div style="margin-top:10px; font-weight:700;">Comments:</div>
+    <div class="comments-box">
+      <textarea name="comments" placeholder="">{{comments}}</textarea>
+    </div>
+
+    <!-- Signatures -->
+    <div class="sign-row">
+      <div>
+        <div class="sig-block">
+          <div class="lbl">Employee Signature:</div>
+          <div class="sigline">{{sign.employee_signature}}</div>
+        </div>
+      </div>
+      <div>
+        <div class="sig-block">
+          <div class="lbl">Date:</div>
+          <div class="sigline">{{sign.employee_date}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sign-row" style="margin-top:6px;">
+      <div>
+        <div class="sig-block">
+          <div class="lbl">OHNP Signature:</div>
+          <div class="sigline">{{sign.ohnp_signature}}</div>
+        </div>
+      </div>
+      <div>
+        <div class="sig-block">
+          <div class="lbl">Date:</div>
+          <div class="sigline">{{sign.ohnp_date}}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <input type="hidden" name="template_name" value="musculoskeletal_questionnaire" />
+    <input type="hidden" name="template_version" value="1.0" />
+
+    <div class="no-print" style="margin-top:10px; font-size:12px; color:#444;">
+      If your templating engine doesn’t support <code>(eq ...)</code>, replace those selected checks with your engine’s equivalent,
+      or tell me what you use and I’ll rewrite the conditionals.
+    </div>
+  </div>
+</body>
+</html>

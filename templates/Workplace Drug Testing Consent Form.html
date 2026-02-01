@@ -1,0 +1,353 @@
+<!--
+HTML template (with variables) for: "Workplace Drug Testing Consent Form"
+Source: :contentReference[oaicite:0]{index=0}
+
+Templating:
+- Uses Handlebars-style variables: {{var}} and loops: {{#each ...}}
+- If you use Jinja2/EJS/Liquid, replace syntax accordingly.
+
+Suggested data shape:
+{
+  employee: {
+    full_name: "John Doe",
+    id_number: "1234567890",
+    employer: "Company Name",
+    job_title: "Forklift Operator"
+  },
+  consent: {
+    meds_discussed: true
+  },
+  meds: [
+    { name: "Medication A", date_last_taken: "2026-01-10", reason: "Flu" },
+    ...
+  ],
+  results: {
+    cocaine: "Negative",         // "Positive" | "Negative" | ""
+    amphetamine: "Negative",
+    cannabis: "Negative",
+    opiates: "Negative",
+    methamphetamine: "Negative",
+    benzodiazepine: "Negative"
+  },
+  meta: {
+    lot_number: "LOT123",
+    expiry_date: "2026-12-31",
+    date_tested: "2026-01-14"
+  },
+  sign: {
+    employee_signature_text: "John Doe",
+    employee_signature_img: "",  // base64 png (no prefix) optional
+    ohn_signature_text: "Nurse Name",
+    ohn_signature_img: ""        // base64 png optional
+  }
+}
+
+Notes:
+- For "Positive/Negative" columns, this template renders an "X" based on values.
+- If your engine doesn't support (eq), replace those checks with your engine equivalent.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Workplace Drug Testing Consent Form</title>
+  <style>
+    :root{
+      --ink:#111;
+      --grid:#000;
+      --muted:#333;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 12.5px;
+      --pad: 8px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:16mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .page{ margin:0; box-shadow:none; width:auto; min-height:auto; padding:14mm 12mm; }
+      .no-print{ display:none !important; }
+    }
+
+    .title{
+      font-weight:800;
+      font-size:16px;
+      margin:0 0 12px 0;
+      text-transform:uppercase;
+    }
+
+    .para{
+      font-size:var(--fs);
+      line-height:1.35;
+      margin:0 0 10px 0;
+    }
+
+    .line{
+      display:inline-block;
+      min-width:220px;
+      border-bottom:1px solid var(--grid);
+      padding:0 2px 2px 2px;
+      transform:translateY(-1px);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:var(--fs);
+    }
+    .grid td, .grid th{
+      border:1px solid var(--grid);
+      padding:var(--pad);
+      vertical-align:middle;
+    }
+    .grid th{
+      font-weight:700;
+      text-align:left;
+    }
+
+    .section-title{
+      font-weight:700;
+      margin:14px 0 8px 0;
+      font-size:13px;
+    }
+
+    .meds th{ text-align:left; }
+    .meds .c1{ width:40%; }
+    .meds .c2{ width:20%; }
+    .meds .c3{ width:40%; }
+
+    .results th{ text-align:center; }
+    .results td{ text-align:center; }
+    .results .c-drug{ text-align:left; width:55%; font-weight:700; }
+    .results .c-pos{ width:22.5%; }
+    .results .c-neg{ width:22.5%; }
+
+    .x{
+      font-weight:800;
+      font-size:14px;
+      letter-spacing:.5px;
+    }
+
+    .meta{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      font-size:var(--fs);
+    }
+
+    .meta .row{
+      display:flex;
+      gap:8px;
+      align-items:flex-end;
+    }
+    .meta .lbl{
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .meta .val{
+      flex:1 1 auto;
+      border-bottom:1px solid var(--grid);
+      min-height:18px;
+      padding:0 2px 2px 2px;
+    }
+
+    .signs{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      font-size:var(--fs);
+    }
+
+    .sigbox{
+      border-bottom:1px solid var(--grid);
+      min-height:22px;
+      display:flex;
+      align-items:center;
+      padding:0 2px 2px 2px;
+    }
+    .sigbox img{
+      max-height:34px;
+      max-width:100%;
+      object-fit:contain;
+      display:block;
+    }
+    .siglbl{
+      font-weight:700;
+      margin-top:6px;
+    }
+
+    .muted{ color:var(--muted); font-size:12px; }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="title">Workplace Drug Testing Consent Form</div>
+
+    <!-- Consent paragraphs (with inline "lines" like the doc) -->
+    <p class="para">
+      I,
+      <span class="line">{{employee.full_name}}</span>,
+      with ID Num
+      <span class="line" style="min-width:180px;">{{employee.id_number}}</span>,
+      employed by
+      <span class="line">{{employee.employer}}</span>,
+      as a/an
+      <span class="line" style="min-width:180px;">{{employee.job_title}}</span>
+      hereby give consent for a drug screening test to be done on myself.
+      I have discussed any medication/drugs/supplements that I am currently taking.
+    </p>
+
+    <p class="para">
+      I agree and give permission that the results of the test to be made known to my employer.
+      I hereby declare that the test was opened and sealed in my presence.
+    </p>
+
+    <!-- Medication section -->
+    <div class="section-title">Medication/Supplements/Drugs taken in the past week:</div>
+
+    <table class="grid meds" aria-label="Medication list">
+      <thead>
+        <tr>
+          <th class="c1">Name of Medication</th>
+          <th class="c2">Date last taken</th>
+          <th class="c3">Reason for this treatment</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if meds.length}}
+          {{#each meds}}
+          <tr>
+            <td>{{name}}</td>
+            <td>{{date_last_taken}}</td>
+            <td>{{reason}}</td>
+          </tr>
+          {{/each}}
+        {{else}}
+          <!-- default blank rows to match paper form feel -->
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+        {{/if}}
+      </tbody>
+    </table>
+
+    <!-- Results section -->
+    <div class="section-title">Test Result</div>
+
+    <table class="grid results" aria-label="Drug test results">
+      <thead>
+        <tr>
+          <th class="c-drug">Drugs Tested</th>
+          <th class="c-pos">Positive</th>
+          <th class="c-neg">Negative</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="c-drug">Cocaine - COC</td>
+          <td class="c-pos">{{#if (eq results.cocaine "Positive")}}<span class="x">X</span>{{/if}}</td>
+          <td class="c-neg">{{#if (eq results.cocaine "Negative")}}<span class="x">X</span>{{/if}}</td>
+        </tr>
+        <tr>
+          <td class="c-drug">Amphetamine - AMP</td>
+          <td class="c-pos">{{#if (eq results.amphetamine "Positive")}}<span class="x">X</span>{{/if}}</td>
+          <td class="c-neg">{{#if (eq results.amphetamine "Negative")}}<span class="x">X</span>{{/if}}</td>
+        </tr>
+        <tr>
+          <td class="c-drug">Cannabis - THC</td>
+          <td class="c-pos">{{#if (eq results.cannabis "Positive")}}<span class="x">X</span>{{/if}}</td>
+          <td class="c-neg">{{#if (eq results.cannabis "Negative")}}<span class="x">X</span>{{/if}}</td>
+        </tr>
+        <tr>
+          <td class="c-drug">Opiates/Morphine/Heroin - MOP</td>
+          <td class="c-pos">{{#if (eq results.opiates "Positive")}}<span class="x">X</span>{{/if}}</td>
+          <td class="c-neg">{{#if (eq results.opiates "Negative")}}<span class="x">X</span>{{/if}}</td>
+        </tr>
+        <tr>
+          <td class="c-drug">Metamphetamine/Tik/Crystal - MET</td>
+          <td class="c-pos">{{#if (eq results.methamphetamine "Positive")}}<span class="x">X</span>{{/if}}</td>
+          <td class="c-neg">{{#if (eq results.methamphetamine "Negative")}}<span class="x">X</span>{{/if}}</td>
+        </tr>
+        <tr>
+          <td class="c-drug">Benzodiazepine/Valium/Sedatives - BZO</td>
+          <td class="c-pos">{{#if (eq results.benzodiazepine "Positive")}}<span class="x">X</span>{{/if}}</td>
+          <td class="c-neg">{{#if (eq results.benzodiazepine "Negative")}}<span class="x">X</span>{{/if}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Lot/expiry/date tested -->
+    <div class="meta">
+      <div class="row">
+        <div class="lbl">Lot number:</div>
+        <div class="val">{{meta.lot_number}}</div>
+      </div>
+      <div class="row">
+        <div class="lbl">Expiry Date:</div>
+        <div class="val">{{meta.expiry_date}}</div>
+      </div>
+      <div class="row">
+        <div class="lbl">Date tested:</div>
+        <div class="val">{{meta.date_tested}}</div>
+      </div>
+      <div></div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="signs">
+      <div>
+        <div class="sigbox">
+          {{#if sign.employee_signature_img}}
+            <img alt="Employee Signature" src="data:image/png;base64,{{sign.employee_signature_img}}" />
+          {{else}}
+            {{sign.employee_signature_text}}
+          {{/if}}
+        </div>
+        <div class="siglbl">Employee Signature:</div>
+      </div>
+
+      <div>
+        <div class="sigbox">
+          {{#if sign.ohn_signature_img}}
+            <img alt="OHN/OHP Signature" src="data:image/png;base64,{{sign.ohn_signature_img}}" />
+          {{else}}
+            {{sign.ohn_signature_text}}
+          {{/if}}
+        </div>
+        <div class="siglbl">OHN/OHP Signature:</div>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <input type="hidden" name="template_name" value="workplace_drug_testing_consent_form" />
+    <input type="hidden" name="template_version" value="1.0" />
+
+    <div class="no-print muted" style="margin-top:10px;">
+      If you tell me your templating engine (Handlebars / Jinja2 / EJS / Liquid) I can rewrite the <code>(eq ...)</code> parts to match it exactly.
+    </div>
+
+  </div>
+</body>
+</html>

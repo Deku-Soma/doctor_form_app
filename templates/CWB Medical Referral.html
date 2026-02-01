@@ -1,0 +1,290 @@
+<!--
+HTML template (with variables) for: "Complete Wellbeing - Referral Form"
+Source: :contentReference[oaicite:0]{index=0}
+
+How to use variables:
+- This template uses Handlebars-style variables: {{variable}}
+- If you use a different templating engine (EJS, Jinja2, Liquid), replace {{...}} accordingly.
+
+Suggested data object keys:
+brand_name, brand_tagline, address, email, tel, mobile, website,
+name, surname, id_number, job_title, employer, examination_date,
+referral_to, practitioner_signature, practitioner_date,
+stamp_left_text, stamp_right_text, note1, note2
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Referral Form</title>
+  <style>
+    :root{
+      --ink:#111;
+      --muted:#333;
+      --grid:#000;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 12.5px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:18mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .page{
+        margin:0;
+        box-shadow:none;
+        width:auto;
+        min-height:auto;
+        padding:14mm 12mm;
+      }
+    }
+
+    .center{ text-align:center; }
+    .brand{
+      font-weight:700;
+      font-size:14px;
+      margin:0 0 3px 0;
+    }
+    .tagline{
+      margin:0 0 8px 0;
+      font-style:italic;
+      font-size:12.5px;
+    }
+    .contact{
+      margin:0;
+      font-size:12px;
+      line-height:1.25;
+    }
+
+    hr.sep{
+      border:0;
+      border-top:1px solid #bbb;
+      margin:12px 0;
+    }
+
+    .title{
+      font-weight:700;
+      font-size:15px;
+      text-transform:uppercase;
+      margin:10px 0 12px 0;
+    }
+
+    .row{
+      display:flex;
+      gap:12px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      margin:8px 0;
+      font-size:var(--fs);
+    }
+
+    .field{
+      display:flex;
+      gap:8px;
+      align-items:flex-end;
+      flex:1 1 auto;
+      min-width:220px;
+    }
+
+    .label{
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .line{
+      flex:1 1 auto;
+      border-bottom:1px solid var(--grid);
+      min-width:160px;
+      padding:0 2px 2px 2px;
+    }
+
+    /* For PDF generators that don't like underline borders, switch to .box style */
+    .line .val{
+      display:inline-block;
+      min-width:1px;
+    }
+
+    .section{
+      margin-top:12px;
+      font-size:var(--fs);
+    }
+
+    .section-title{
+      font-weight:700;
+      margin:10px 0 6px 0;
+    }
+
+    .sig{
+      margin-top:8px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+    }
+    .sig .field{ min-width:280px; }
+
+    .stamps{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    .stamp-box{
+      border:1px solid #000;
+      height:120px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .notes{
+      margin-top:14px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+      text-align:center;
+      line-height:1.35;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div class="center">
+      <div class="brand">{{brand_name}}</div>
+      <div class="tagline">{{brand_tagline}}</div>
+
+      <p class="contact">{{address}}</p>
+      <p class="contact">Email : {{email}}</p>
+      <p class="contact">Tel : {{tel}}</p>
+      <p class="contact">Mobile : {{mobile}}</p>
+      <p class="contact">Website : {{website}}</p>
+
+      <div class="title">Referral Form</div>
+    </div>
+
+    <hr class="sep" />
+
+    <!-- Details (lines) -->
+    <div class="row">
+      <div class="field">
+        <div class="label">Name :</div>
+        <div class="line"><span class="val">{{name}}</span></div>
+      </div>
+      <div class="field">
+        <div class="label">Surname:</div>
+        <div class="line"><span class="val">{{surname}}</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <div class="label">ID number :</div>
+        <div class="line"><span class="val">{{id_number}}</span></div>
+      </div>
+      <div class="field">
+        <div class="label">Job Title :</div>
+        <div class="line"><span class="val">{{job_title}}</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field" style="min-width:100%;">
+        <div class="label">Employer:</div>
+        <div class="line"><span class="val">{{employer}}</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field" style="min-width:100%;">
+        <div class="label">Examination Date:</div>
+        <div class="line"><span class="val">{{examination_date}}</span></div>
+      </div>
+    </div>
+
+    <!-- Referral section -->
+    <div class="section">
+      <div class="section-title">Referral for the following by OHMP/ONHP</div>
+
+      <div class="row">
+        <div class="field" style="min-width:100%;">
+          <div class="line"><span class="val">{{referral_to}}</span></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field" style="min-width:100%;">
+          <div class="line"><span class="val">{{referral_details}}</span></div>
+        </div>
+      </div>
+
+      <!-- Signature -->
+      <div class="sig">
+        <div class="field">
+          <div class="label">Treating Practitioner's Signature</div>
+          <div class="line"><span class="val">{{practitioner_signature}}</span></div>
+        </div>
+        <div class="field" style="max-width:260px;">
+          <div class="label">Date:</div>
+          <div class="line"><span class="val">{{practitioner_date}}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stamps -->
+    <div class="stamps">
+      <div class="stamp-box">
+        {{#if stamp_left_text}}
+          <div>{{{stamp_left_text}}}</div>
+        {{else}}
+          <div>Stamp</div>
+        {{/if}}
+      </div>
+
+      <div class="stamp-box">
+        {{#if stamp_right_text}}
+          <div>{{{stamp_right_text}}}</div>
+        {{else}}
+          <div>Stamp Complete Wellbeing</div>
+        {{/if}}
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="notes">
+      <div>{{note1}}</div>
+      <div>{{note2}}</div>
+    </div>
+
+  </div>
+
+  <!-- Sensible defaults (you can remove this block in production) -->
+  <script>
+    // If you render server-side, you won't need this.
+    // This block is intentionally empty.
+  </script>
+</body>
+</html>

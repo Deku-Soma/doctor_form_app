@@ -1,15 +1,16 @@
-/* Modern Theme based on HealthCorp360 Palette */
+/* Modern Dark Theme for Doctor Form App */
 
 QWidget {
     font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
     font-size: 14px;
-    color: #1d0118;
-    background-color: #f4f6f9;
+    color: #ffffff;
+    background-color: #2b2b2b;
 }
 
 /* --- Main Window & Containers --- */
-QMainWindow, QStackedWidget {
-    background-color: #f4f6f9;
+QMainWindow, QStackedWidget, QDialog {
+    background-color: #2b2b2b;
+    color: #ffffff;
 }
 
 QScrollArea {
@@ -23,39 +24,53 @@ QScrollArea > QWidget > QWidget {
 
 /* --- Typography --- */
 QLabel {
-    color: #163b4d; /* Deep Teal */
+    color: #ffffff;
     font-weight: 500;
 }
 
 QLabel[heading="true"] {
     font-size: 24px;
     font-weight: bold;
-    color: #163b4d;
+    color: #1abc9c; /* Teal accent for headers only */
     margin-bottom: 10px;
 }
 
 /* --- Input Fields --- */
 QLineEdit, QTextEdit, QDateEdit, QComboBox {
-    background-color: #ffffff;
-    border: 1px solid #cfd8dc;
+    background-color: #3d3d3d;
+    border: 1px solid #555555;
     border-radius: 6px;
     padding: 8px;
-    color: #1d0118;
-    selection-background-color: #163b4d;
+    color: #ffffff;
+    selection-background-color: #1abc9c;
     selection-color: #ffffff;
 }
 
+QLineEdit::placeholder, QTextEdit::placeholder {
+    color: #aaaaaa;
+}
+
 QLineEdit:focus, QTextEdit:focus, QDateEdit:focus, QComboBox:focus {
-    border: 2px solid #163b4d;
+    border: 2px solid #1abc9c;
 }
 
 QLineEdit:hover, QTextEdit:hover, QDateEdit:hover, QComboBox:hover {
-    border: 1px solid #163b4d;
+    border: 1px solid #1abc9c;
+}
+
+/* Only enable drop-down styling for QComboBox (fix arrow color if needed) */
+QComboBox::drop-down {
+    border: 0px;
+}
+QComboBox QAbstractItemView {
+    background-color: #3d3d3d;
+    color: #ffffff;
+    selection-background-color: #1abc9c;
 }
 
 /* --- Buttons --- */
 QPushButton {
-    background-color: #163b4d; /* Deep Teal */
+    background-color: #1abc9c; /* Teal */
     color: #ffffff;
     border: none;
     border-radius: 6px;
@@ -65,40 +80,80 @@ QPushButton {
 }
 
 QPushButton:hover {
-    background-color: #685070; /* Muted Purple Accent on Hover */
+    background-color: #16a085; /* Darker Teal */
 }
 
 QPushButton:pressed {
-    background-color: #1d0118;
-    padding-top: 11px; /* Slight press effect */
+    background-color: #0e6655;
+    padding-top: 11px;
     padding-bottom: 9px;
 }
 
 QPushButton:disabled {
-    background-color: #b0bec5;
-    color: #f4f6f9;
+    background-color: #555555;
+    color: #aaaaaa;
 }
 
 /* --- Signature Pad Area --- */
 QWidget#SignaturePad {
-    background-color: #ffffff;
-    border: 1px dashed #163b4d;
+    background-color: #ffffff; /* Signature pad must remain white for ink */
+    border: 1px dashed #ffffff;
     border-radius: 6px;
+    color: #000000; /* Ensure black ink is visible if drawn */
 }
 
 /* --- Specific Overrides --- */
-/* Make scrollbars slightly prettier/slimmer if possible (OS dependent, but standard Qt tweaks) */
 QScrollBar:vertical {
     border: none;
-    background: #f4f6f9;
+    background: #2b2b2b;
     width: 10px;
     margin: 0px 0px 0px 0px;
 }
 QScrollBar::handle:vertical {
-    background: #b0bec5;
+    background: #555555;
     min-height: 20px;
     border-radius: 5px;
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
+}
+
+/* --- Form Cards (using QFrame) --- */
+QFrame#FormCard {
+    background-color: #3d3d3d;
+    border: 2px solid #555555;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+QFrame#FormCard:hover {
+    background-color: #454545;
+    border: 2px solid #1abc9c;
+}
+
+/* Card labels */
+QFrame#FormCard QLabel {
+    background-color: transparent;
+    border: none;
+    color: #ffffff;
+}
+
+/* Table Widget */
+QTableWidget {
+    background-color: #3d3d3d;
+    color: #ffffff;
+    gridline-color: #555555;
+    border: none;
+}
+QHeaderView::section {
+    background-color: #2b2b2b;
+    color: #ffffff;
+    padding: 5px;
+    border: none;
+}
+
+/* --- Fix for Black Bars on Labels --- */
+/* Ensure all QLabels have transparent background unless specified */
+QLabel {
+    background-color: transparent;
 }

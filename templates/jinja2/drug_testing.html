@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drug Testing Consent Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .label {
+            font-weight: bold;
+            width: 30%;
+        }
+
+        .signature-box {
+            min-height: 120px;
+            padding: 5px;
+        }
+
+        .signature-box img {
+            max-height: 110px;
+            max-width: 100%;
+        }
+
+        .logo-header {
+            text-align: left;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #163b4d;
+        }
+
+        .logo-header img {
+            max-height: 96px;
+            max-width: 360px;
+        }
+    </style>
+</head>
+
+<body>
+    {% if logo_data_uri %}
+    <div class="logo-header">
+        <img src="{{ logo_data_uri }}" alt="Logo">
+    </div>
+    {% endif %}
+
+    <h1>WORKPLACE DRUG TESTING CONSENT FORM</h1>
+
+    <h3>Employee Details</h3>
+    <table>
+        <tr>
+            <td class="label">Full Name:</td>
+            <td>{{ employee.full_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">ID Number:</td>
+            <td>{{ employee.id_number }}</td>
+        </tr>
+        <tr>
+            <td class="label">Employer:</td>
+            <td>{{ employee.employer }}</td>
+        </tr>
+        <tr>
+            <td class="label">Job Title:</td>
+            <td>{{ employee.job_title }}</td>
+        </tr>
+    </table>
+
+    <h3>Medications/Supplements</h3>
+    <table>
+        <tr>
+            <th>Name of Medication</th>
+            <th>Date Last Taken</th>
+            <th>Reason for Treatment</th>
+        </tr>
+        {% for med in meds %}
+        <tr>
+            <td>{{ med.name }}</td>
+            <td>{{ med.date_last_taken }}</td>
+            <td>{{ med.reason }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>Test Results</h3>
+    <table>
+        <tr>
+            <td class="label">Cocaine (COC):</td>
+            <td>{{ results.cocaine }}</td>
+        </tr>
+        <tr>
+            <td class="label">Amphetamine (AMP):</td>
+            <td>{{ results.amphetamine }}</td>
+        </tr>
+        <tr>
+            <td class="label">Cannabis (THC):</td>
+            <td>{{ results.cannabis }}</td>
+        </tr>
+        <tr>
+            <td class="label">Opiates (MOP):</td>
+            <td>{{ results.opiates }}</td>
+        </tr>
+        <tr>
+            <td class="label">Methamphetamine (MET):</td>
+            <td>{{ results.methamphetamine }}</td>
+        </tr>
+        <tr>
+            <td class="label">Benzodiazepine (BZO):</td>
+            <td>{{ results.benzodiazepine }}</td>
+        </tr>
+    </table>
+
+    <h3>Test Metadata</h3>
+    <table>
+        <tr>
+            <td class="label">Lot Number:</td>
+            <td>{{ meta.lot_number }}</td>
+        </tr>
+        <tr>
+            <td class="label">Expiry Date:</td>
+            <td>{{ meta.expiry_date }}</td>
+        </tr>
+        <tr>
+            <td class="label">Date Tested:</td>
+            <td>{{ meta.date_tested }}</td>
+        </tr>
+    </table>
+
+    <h3>Signatures</h3>
+    <table>
+        <tr>
+            <td class="label">Employee Signature:</td>
+            <td>
+                <div class="signature-box">
+                    {% if sign %}
+                    {% if sign.employee_signature_img %}
+                    <img src="data:image/png;base64,{{ sign.employee_signature_img }}" alt="Employee Signature" />
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="label">OHN/OHP Signature:</td>
+            <td>
+                <div class="signature-box">
+                    {% if sign %}
+                    {% if sign.ohn_signature_img %}
+                    <img src="data:image/png;base64,{{ sign.ohn_signature_img }}" alt="OHN Signature" />
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Stamps Footer -->
+    <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;">
+        {% if stamp1_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp1_data_uri }}" alt="Dr. Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+        {% if stamp2_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp2_data_uri }}" alt="Company Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,348 @@
+<!--
+HTML template for: "CONSTRUCTION ANNEXURE 3 – Medical Certificate of Fitness"
+Source: :contentReference[oaicite:0]{index=0}
+
+Notes:
+- Designed to look like a printed form (A4) and be fillable in a form builder.
+- Uses standard inputs/textareas with name="" attributes for easy mapping.
+- Print-friendly (keeps borders, spacing, and layout).
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Construction Annexure 3 - Medical Certificate of Fitness</title>
+  <style>
+    :root{
+      --ink:#111;
+      --grid:#000;
+      --muted:#333;
+      --pad:10px;
+      --font: Arial, Helvetica, sans-serif;
+      --fs: 12.5px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#f2f2f2;
+      font-family:var(--font);
+      color:var(--ink);
+    }
+
+    /* A4 page shell */
+    .page{
+      width:210mm;
+      min-height:297mm;
+      margin:14px auto;
+      background:#fff;
+      padding:18mm 14mm;
+      box-shadow:0 2px 18px rgba(0,0,0,.12);
+    }
+
+    /* Print */
+    @media print{
+      body{ background:#fff; }
+      .page{
+        margin:0;
+        box-shadow:none;
+        width:auto;
+        min-height:auto;
+        padding:14mm 12mm;
+      }
+      input, textarea, select{
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+
+    .center{ text-align:center; }
+    .h1{
+      font-weight:700;
+      letter-spacing:.2px;
+      margin:0 0 6px 0;
+      font-size:15px;
+      text-transform:uppercase;
+    }
+    .h2{
+      font-weight:700;
+      margin:0 0 4px 0;
+      font-size:13.5px;
+      text-transform:uppercase;
+    }
+    .h3{
+      font-weight:700;
+      margin:14px 0 8px 0;
+      font-size:13px;
+    }
+    .sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.25;
+      text-transform:uppercase;
+    }
+
+    .spacer{ height:12px; }
+
+    /* Form look */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:var(--fs);
+    }
+    .grid td, .grid th{
+      border:1px solid var(--grid);
+      padding:8px 8px;
+      vertical-align:top;
+    }
+    .grid th{
+      font-weight:700;
+      text-align:left;
+      background:#fff;
+    }
+
+    .label{
+      font-weight:700;
+      width:32%;
+      white-space:nowrap;
+    }
+
+    /* Inputs styled like form text (no heavy UI chrome) */
+    input[type="text"], input[type="date"], textarea, select{
+      width:100%;
+      border:0;
+      outline:none;
+      font-family:var(--font);
+      font-size:var(--fs);
+      padding:0;
+      margin:0;
+      background:transparent;
+      color:var(--ink);
+    }
+    textarea{
+      resize:none;
+      min-height:56px;
+      line-height:1.25;
+    }
+
+    .note{
+      color:var(--muted);
+      font-size:11.5px;
+    }
+
+    /* Matrix table */
+    .matrix th{
+      text-align:center;
+      font-weight:700;
+    }
+    .matrix .col-1{ width:16%; }
+    .matrix .col-2{ width:21%; }
+    .matrix .col-3{ width:21%; }
+    .matrix .col-4{ width:21%; }
+    .matrix .col-5{ width:21%; }
+
+    .matrix textarea{
+      min-height:86px;
+    }
+
+    /* Declaration block */
+    .decl{
+      margin-top:14px;
+      border:1px solid var(--grid);
+      padding:10px 10px;
+      font-size:var(--fs);
+    }
+    .decl p{ margin:0 0 8px 0; }
+
+    .fitline{
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      margin:8px 0 0 0;
+    }
+    .fitline .fitbox{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--grid);
+      padding:6px 10px;
+      min-width:250px;
+    }
+    .fitline label{
+      font-weight:700;
+      margin-right:4px;
+    }
+    .fitline input[type="radio"]{
+      transform:translateY(1px);
+    }
+
+    .sigtable td{
+      height:44px;
+    }
+    .sigline{
+      border-bottom:1px solid var(--grid);
+      height:22px;
+      margin-top:8px;
+    }
+
+    .two-col{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .small{
+      font-size:11.5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="center">
+      <div class="h1">Construction Annexure 3</div>
+      <p class="sub">Occupational Health and Safety Act 85 of 1993</p>
+      <p class="sub">Construction Regulations 2014</p>
+      <div class="spacer"></div>
+      <div class="h2">Medical Certificate of Fitness</div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Top details -->
+    <table class="grid">
+      <tr>
+        <td class="label">Company</td>
+        <td>
+          <input type="text" name="company" placeholder="Enter company name" />
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Employee Name &amp; Surname</td>
+        <td>
+          <input type="text" name="employee_name" placeholder="Enter employee full name" />
+        </td>
+      </tr>
+      <tr>
+        <td class="label">ID/PP Number</td>
+        <td>
+          <input type="text" name="id_pp_number" placeholder="Enter ID/Passport number" />
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Co. Number</td>
+        <td>
+          <input type="text" name="co_number" placeholder="Enter Co. number" />
+        </td>
+      </tr>
+    </table>
+
+    <div class="spacer"></div>
+
+    <!-- Matrix -->
+    <table class="grid matrix">
+      <thead>
+        <tr>
+          <th class="col-1"></th>
+          <th class="col-2">*Occupation</th>
+          <th class="col-3">*Possible Exposures<br><span class="note">(e.g. Noise, heat, fall risk, confined space, dust, etc.)</span></th>
+          <th class="col-4">*Job Specific Requirements<br><span class="note">(e.g. Operating lifting equipment, erecting formwork, etc.)</span></th>
+          <th class="col-5">*Protective Equipment<br><span class="note">(e.g. Dust respirator, ear plugs / muffs, etc.)</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="label">Details</td>
+          <td><textarea name="occupation" placeholder="Occupation"></textarea></td>
+          <td><textarea name="possible_exposures" placeholder="List possible exposures"></textarea></td>
+          <td><textarea name="job_requirements" placeholder="List job specific requirements"></textarea></td>
+          <td><textarea name="protective_equipment" placeholder="List protective equipment"></textarea></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="spacer"></div>
+
+    <!-- Declaration -->
+    <div class="decl">
+      <div class="h3" style="margin:0 0 8px 0;">Declaration by the Medical Examiner:</div>
+
+      <p>
+        I certify that I have, by examination and testing, using the above criteria specified by the employer,
+        satisfied myself that the above-mentioned employee is
+      </p>
+
+      <div class="fitline">
+        <div class="fitbox" role="group" aria-label="Fitness status">
+          <label>Fit / Unfit</label>
+          <span class="small">(cross out non-applicable)</span>
+          <span style="flex:1 1 auto;"></span>
+          <label class="small"><input type="radio" name="fitness_status" value="Fit"> Fit</label>
+          <label class="small"><input type="radio" name="fitness_status" value="Unfit"> Unfit</label>
+        </div>
+
+        <div class="small">to perform the duties as described by the employer in the matrix above.</div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="small" style="font-weight:700; margin-bottom:6px;">
+        Occupational Medicine Practitioner / Occupational Health Nursing Practitioner
+      </div>
+
+      <!-- Practitioner / signature section -->
+      <table class="grid sigtable">
+        <tr>
+          <td class="label">Name (Please print name)</td>
+          <td>
+            <input type="text" name="practitioner_name" placeholder="Practitioner name" />
+          </td>
+        </tr>
+        <tr>
+          <td class="label">Signature</td>
+          <td>
+            <!-- If you capture signature as image/base64 in your app, you can replace this with an <img> -->
+            <div class="sigline"></div>
+            <div class="note">Sign here (or capture digital signature in the app)</div>
+          </td>
+        </tr>
+      </table>
+
+      <div class="two-col">
+        <table class="grid">
+          <tr>
+            <td class="label">Practice number</td>
+            <td><input type="text" name="practice_number" placeholder="Practice number" /></td>
+          </tr>
+        </table>
+
+        <table class="grid">
+          <tr>
+            <td class="label">Date</td>
+            <td><input type="date" name="exam_date" /></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="spacer"></div>
+
+      <table class="grid">
+        <tr>
+          <td class="label">Address</td>
+          <td>
+            <input type="text" name="practice_address" placeholder="Practice address" />
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Optional hidden metadata fields for your system -->
+    <input type="hidden" name="template_name" value="construction_annexure_3_medical_certificate" />
+    <input type="hidden" name="template_version" value="1.0" />
+  </div>
+</body>
+</html>

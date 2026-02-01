@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psychology Questionnaire (K10)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;\n            
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .label {
+            font-weight: bold;
+            width: 30%;
+        }
+
+        .score {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1f5fa4;
+        }
+
+        .signature-box {
+            min-height: 120px;
+            padding: 5px;
+        }
+
+        .signature-box img {
+            max-height: 110px;
+            max-width: 100%;
+        }
+
+        .logo-header {
+            text-align: left;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #163b4d;
+        }
+
+        .logo-header img {
+            max-height: 96px;
+            max-width: 360px;
+        }
+    </style>
+</head>
+
+<body>
+    {% if logo_data_uri %}
+    <div class="logo-header">
+        <img src="{{ logo_data_uri }}" alt="Logo">
+    </div>
+    {% endif %}
+
+    <h1>PSYCHOSOCIAL QUESTIONNAIRE (Kessler K10)</h1>
+
+    <table>
+        <tr>
+            <td class="label">Name and Surname:</td>
+            <td>{{ employee.full_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">ID Number:</td>
+            <td>{{ employee.id_number }}</td>
+        </tr>
+        <tr>
+            <td class="label">Occupation:</td>
+            <td>{{ employee.occupation }}</td>
+        </tr>
+        <tr>
+            <td class="label">Department:</td>
+            <td>{{ employee.department }}</td>
+        </tr>
+    </table>
+
+    <h3>K10 Responses (1=None, 2=Little, 3=Some, 4=Most, 5=All the time)</h3>
+    <table>
+        <tr>
+            <td>1. Tired out for no good reason?</td>
+            <td>{{ responses.q1 }}</td>
+        </tr>
+        <tr>
+            <td>2. Nervous?</td>
+            <td>{{ responses.q2 }}</td>
+        </tr>
+        <tr>
+            <td>3. So nervous nothing could calm you?</td>
+            <td>{{ responses.q3 }}</td>
+        </tr>
+        <tr>
+            <td>4. Hopeless?</td>
+            <td>{{ responses.q4 }}</td>
+        </tr>
+        <tr>
+            <td>5. Restless or fidgety?</td>
+            <td>{{ responses.q5 }}</td>
+        </tr>
+        <tr>
+            <td>6. So restless couldn't sit still?</td>
+            <td>{{ responses.q6 }}</td>
+        </tr>
+        <tr>
+            <td>7. Depressed?</td>
+            <td>{{ responses.q7 }}</td>
+        </tr>
+        <tr>
+            <td>8. Everything was an effort?</td>
+            <td>{{ responses.q8 }}</td>
+        </tr>
+        <tr>
+            <td>9. So sad nothing could cheer you up?</td>
+            <td>{{ responses.q9 }}</td>
+        </tr>
+        <tr>
+            <td>10. Worthless?</td>
+            <td>{{ responses.q10 }}</td>
+        </tr>
+    </table>
+
+    <p class="score">Total Score: {{ score }}</p>
+    <p><i>10-19=Well, 20-24=Mild, 25-29=Moderate, 30+=Severe</i></p>
+
+    <h3>Signatures</h3>
+    <table>
+        <tr>
+            <td class="label">Employee Signature:</td>
+            <td>
+                <div class="signature-box">
+                    {% if sign.employee_signature_base64 %}
+                    <img src="{{ sign.employee_signature_base64 }}" alt="Employee Signature" />
+                    {% endif %}
+                </div>
+            </td>
+            <td class="label">Date:</td>
+            <td>{{ sign.employee_date }}</td>
+        </tr>
+        <tr>
+            <td class="label">OHNP Signature:</td>
+            <td>
+                <div class="signature-box">
+                    {% if sign.ohnp_signature_base64 %}
+                    <img src="{{ sign.ohnp_signature_base64 }}" alt="OHNP Signature" />
+                    {% endif %}
+                </div>
+            </td>
+            <td class="label">Date:</td>
+            <td>{{ sign.ohnp_date }}</td>
+        </tr>
+    </table>
+
+    <!-- Stamps Footer -->
+    <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;">
+        {% if stamp1_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp1_data_uri }}" alt="Dr. Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+        {% if stamp2_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp2_data_uri }}" alt="Company Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musculoskeletal Questionnaire</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;\n            
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .label {
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .signature-box {
+            min-height: 50px;
+            padding: 5px;
+        }
+
+        .signature-box img {
+            max-height: 40px;
+            max-width: 100%;
+        }
+
+        .logo-header {
+            text-align: left;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #163b4d;
+        }
+
+        .logo-header img {
+            max-height: 96px;
+            max-width: 360px;
+        }
+    </style>
+</head>
+
+<body>
+    {% if logo_data_uri %}
+    <div class="logo-header">
+        <img src="{{ logo_data_uri }}" alt="Logo">
+    </div>
+    {% endif %}
+
+    <h1>MUSCULOSKELETAL QUESTIONNAIRE</h1>
+
+    <table>
+        <tr>
+            <td class="label">Name and Surname:</td>
+            <td colspan="3">{{ employee.full_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">ID Number:</td>
+            <td>{{ employee.id_number }}</td>
+            <td class="label">Occupation:</td>
+            <td>{{ employee.occupation }}</td>
+        </tr>
+        <tr>
+            <td class="label">Department:</td>
+            <td colspan="3">{{ employee.department }}</td>
+        </tr>
+    </table>
+
+    <p><b>Have you had trouble in the last 12 months with:</b></p>
+    <table>
+        <tr>
+            <th>Body Part</th>
+            <th>Pain</th>
+            <th>Aches</th>
+            <th>Discomfort</th>
+            <th>Numbness</th>
+            <th>Stiffness</th>
+            <th>Swelling</th>
+        </tr>
+        {% for part in ['neck', 'shoulder', 'upper_body', 'elbows', 'wrist_hands', 'lower_body', 'hips_thighs', 'knees',
+        'ankles', 'feet'] %}
+        <tr>
+            <td class="label">{{ part.replace('_', ' ').title() }}</td>
+            <td>{{ grid[part].pain }}</td>
+            <td>{{ grid[part].aches }}</td>
+            <td>{{ grid[part].discomfort }}</td>
+            <td>{{ grid[part].numbness }}</td>
+            <td>{{ grid[part].stiffness }}</td>
+            <td>{{ grid[part].swelling }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p><b>Comments:</b></p>
+    <div style="border: 1px solid #000; padding: 10px; min-height: 120px;">{{ comments }}</div>
+
+    <h3>Signatures</h3>
+    <table>
+        <tr>
+            <td class="label">Employee:</td>
+            <td>
+                <div class="signature-box">
+                    {% if sign.employee_signature_base64 %}
+                    <img src="{{ sign.employee_signature_base64 }}" alt="Employee Signature" />
+                    {% endif %}
+                </div>
+            </td>
+            <td class="label">Date:</td>
+            <td>{{ sign.employee_date }}</td>
+        </tr>
+        <tr>
+            <td class="label">OHNP:</td>
+            <td>
+                <div class="signature-box">
+                    {% if sign.ohnp_signature_base64 %}
+                    <img src="{{ sign.ohnp_signature_base64 }}" alt="OHNP Signature" />
+                    {% endif %}
+                </div>
+            </td>
+            <td class="label">Date:</td>
+            <td>{{ sign.ohnp_date }}</td>
+        </tr>
+    </table>
+
+    <!-- Stamps Footer -->
+    <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;">
+        {% if stamp1_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp1_data_uri }}" alt="Dr. Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+        {% if stamp2_data_uri %}
+        <div style="text-align: center;">
+            <img src="{{ stamp2_data_uri }}" alt="Company Stamp" style="max-height: 144px; max-width: 240px;">
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>
