@@ -13,6 +13,16 @@ class LocalDB:
     def __init__(self):
         self.conn = sqlite3.connect(DB_NAME, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
+        
+        # Hide the database file on Windows
+        if platform.system() == "Windows" and os.path.exists(DB_NAME):
+            try:
+                import ctypes
+                FILE_ATTRIBUTE_HIDDEN = 0x02
+                ctypes.windll.kernel32.SetFileAttributesW(DB_NAME, FILE_ATTRIBUTE_HIDDEN)
+            except Exception as e:
+                print(f"Failed to hide database file: {e}")
+
         self._create_table()
         self.device_id = self._get_or_create_device_id()
 

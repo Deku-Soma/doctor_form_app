@@ -11,6 +11,7 @@ import base64
 from Utility.local_db import local_db
 import db
 import threading
+import os
 
 
 class FormDrugTesting(QWidget):
@@ -161,9 +162,15 @@ class FormDrugTesting(QWidget):
         try:
             with open(employee_sig_path, "rb") as f:
                 employee_sig_base64 = base64.b64encode(f.read()).decode("utf-8")
-            
             with open(ohn_sig_path, "rb") as f:
                 ohn_sig_base64 = base64.b64encode(f.read()).decode("utf-8")
+
+            # Cleanup temp files
+            if os.path.exists(employee_sig_path):
+                os.remove(employee_sig_path)
+            if os.path.exists(ohn_sig_path):
+                os.remove(ohn_sig_path)
+
         except Exception as e:
             print(f"Error encoding signatures: {e}")
             employee_sig_base64 = ""

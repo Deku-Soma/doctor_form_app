@@ -10,6 +10,7 @@ import base64
 from Utility.local_db import local_db
 import db
 import threading
+import os
 
 
 class FormPsychology(QWidget):
@@ -162,6 +163,13 @@ class FormPsychology(QWidget):
                 emp_sig_base64 = base64.b64encode(f.read()).decode("utf-8")
             with open(ohnp_sig_path, "rb") as f:
                 ohnp_sig_base64 = base64.b64encode(f.read()).decode("utf-8")
+            
+            # Cleanup temp files
+            if os.path.exists(emp_sig_path):
+                os.remove(emp_sig_path)
+            if os.path.exists(ohnp_sig_path):
+                os.remove(ohnp_sig_path)
+
         except Exception as e:
             print(f"Error encoding signatures: {e}")
             emp_sig_base64 = ""

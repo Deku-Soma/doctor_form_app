@@ -9,6 +9,7 @@ import base64
 from Utility.local_db import local_db
 import db
 import threading
+import os
 
 
 class FormCompleteWellbeing(QWidget):
@@ -123,6 +124,11 @@ class FormCompleteWellbeing(QWidget):
         try:
             with open(sig_path, "rb") as f:
                 sig_base64 = base64.b64encode(f.read()).decode("utf-8")
+            
+            # Cleanup temp file
+            if os.path.exists(sig_path):
+                os.remove(sig_path)
+
         except Exception as e:
             print(f"Error encoding signature: {e}")
             sig_base64 = ""

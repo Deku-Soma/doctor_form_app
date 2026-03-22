@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (
     QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QFormLayout, QScrollArea, QDateEdit, QMessageBox, QTextEdit
 )
+import os
 from PyQt5.QtCore import QDate
 from pages.signiture import SignaturePad
 from pages.template_generator import generate_html_pdf
@@ -104,6 +105,11 @@ class FormVitaminB(QWidget):
         try:
             with open(signature_path, "rb") as f:
                 signature_base64 = base64.b64encode(f.read()).decode("utf-8")
+            
+            # Cleanup temp file
+            if os.path.exists(signature_path):
+                os.remove(signature_path)
+                
         except Exception as e:
             print(f"Error encoding signature: {e}")
             signature_base64 = ""
