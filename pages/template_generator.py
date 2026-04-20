@@ -41,7 +41,7 @@ from Utility.local_db import local_db
 from Utility.app_context import get_resource_path
 from datetime import datetime
 
-def generate_pdf_for_form(form_type, data, output_path=None, employee_data=None):
+def generate_pdf_for_form(form_type, data, output_path=None, employee_data=None, status="approved"):
     """
     Generate PDF for a specific form type
     
@@ -204,13 +204,16 @@ def generate_pdf_for_form(form_type, data, output_path=None, employee_data=None)
             except ValueError:
                 db_path = final_path
                 
-            local_db.record_document(
+            doc_id = local_db.record_document(
                 employee_id=employee_data['id'],
                 form_type=form_type,
                 file_path=db_path,
                 file_name=filename,
                 generated_by=data.get('generated_by', 'System')
             )
+            
+            # Create status record for approval workflow
+            local_db.create_document_status(doc_id, status)
         
         # Save debug HTML for troubleshooting
         debug_path = final_path.replace('.pdf', '_debug.html')

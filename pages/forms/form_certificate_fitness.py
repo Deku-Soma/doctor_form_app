@@ -2,7 +2,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QLineEdit, QTextEdit, QPushButton,
     QVBoxLayout, QFormLayout, QScrollArea, QDateEdit, QMessageBox,
-    QCheckBox, QRadioButton, QButtonGroup, QGroupBox
+    QCheckBox, QRadioButton, QButtonGroup, QGroupBox, QHBoxLayout
 )
 from PyQt5.QtCore import QDate
 from pages.signiture import SignaturePad
@@ -164,10 +164,20 @@ class FormCertificateFitness(QWidget):
         clear_sig_btn.clicked.connect(self.signature_pad.clear)
         form_layout.addRow(clear_sig_btn)
 
-        # Submit Button
-        submit_btn = QPushButton("Submit & Save")
-        submit_btn.clicked.connect(self.submit_form)
-        form_layout.addRow(submit_btn)
+        # Action Buttons
+        btn_layout = QHBoxLayout()
+        
+        approve_btn = QPushButton("✅ Approve")
+        approve_btn.setStyleSheet("background-color: #1abc9c; color: white; padding: 10px 20px; font-weight: bold; border-radius: 5px;")
+        approve_btn.clicked.connect(lambda: self.submit_form(status="approved"))
+        btn_layout.addWidget(approve_btn)
+        
+        pending_btn = QPushButton("⏳ Needs Doctor Approval")
+        pending_btn.setStyleSheet("background-color: #f39c12; color: white; padding: 10px 20px; font-weight: bold; border-radius: 5px;")
+        pending_btn.clicked.connect(lambda: self.submit_form(status="pending"))
+        btn_layout.addWidget(pending_btn)
+        
+        form_layout.addRow(btn_layout)
 
         # Back Button
         back_btn = QPushButton("Back to Home")
@@ -181,7 +191,7 @@ class FormCertificateFitness(QWidget):
         layout.addWidget(scroll)
         self.setLayout(layout)
 
-    def submit_form(self):
+    def submit_form(self, status="approved"):
         # Gather medical type data
         medical_type_data = {}
         for key, checkbox in self.medical_type.items():
@@ -264,9 +274,10 @@ class FormCertificateFitness(QWidget):
                 from pages.template_generator import generate_pdf_for_form
                 # Pass employee data for file organization
                 emp_data = getattr(self.main_window, 'selected_employee', None)
-                generate_pdf_for_form("certificate_of_fitness", data, employee_data=emp_data)
+                generate_pdf_for_form("certificate_of_fitness", data, employee_data=emp_data, status=status)
                 
-                QMessageBox.information(self, "Success", "Form saved successfully!\nPDF generated in employee folder.")
+                status_msg = "approved" if status == "approved" else "sent for doctor approval"
+                QMessageBox.information(self, "Success", f"Form saved successfully ({status_msg})!\nPDF generated in employee folder.")
             except Exception as pdf_error:
                 print(f"PDF generation failed: {pdf_error}")
                 import traceback

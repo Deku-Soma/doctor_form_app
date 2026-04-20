@@ -9,6 +9,10 @@ from datetime import datetime, timezone
 DB_NAME = "local_data.db"
 DEVICE_ID_FILE = "device_id.txt"
 
+# Auto-rejection thresholds (days a document can remain 'pending' before auto-reject)
+EXPIRY_DAYS = 30            # Production: 30 days
+TESTING_EXPIRY_DAYS = 1     # Testing: 1 day for quick verification
+
 class LocalDB:
     def __init__(self):
         self.conn = sqlite3.connect(DB_NAME, check_same_thread=False)
@@ -104,6 +108,19 @@ class LocalDB:
         )
         """
         self.conn.execute(documents_query)
+        self.conn.commit()
+        
+        # Document status table (separate table for tracking approval workflow)
+        document_status_query = """
+        CREATE TABLE IF NOT EXISTS document_status (
+            id TEXT PRIMARY KEY,
+            document_id TEXT REFERENCES documents(id),
+            status TEXT NOT NULL DEFAULT 'approved',
+            status_updated_at TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+        """
+        self.conn.execute(document_status_query)
         self.conn.commit()
 
     def upsert_user(self, user_data):
@@ -398,6 +415,69 @@ class LocalDB:
         cursor = self.conn.execute("SELECT * FROM documents WHERE id = ?", (doc_id,))
         row = cursor.fetchone()
         return dict(row) if row else None
+
+    # ============== DOCUMENT STATUS METHODS ==============
+    
+    def create_document_status(self, document_id: str, status: str = "approved") -> str:
+        """Create a status record for a document. Returns status record ID."""
+        now_iso = datetime.now(timezone.utc).isoformat()
+        status_id = str(ulid.ULID())
+        
+        query = """
+        INSERT INTO document_status (id, document_id, status, status_updated_at, created_at)
+        VALUES (?, ?, ?, ?, ?)
+        """
+        self.conn.execute(query, (status_id, document_id, status, now_iso, now_iso))
+        self.conn.commit()
+        return status_id
+    
+    def get_document_status(self, document_id: str) -> dict:
+        """Get the status record for a document."""
+        cursor = self.conn.execute("SELECT * FROM document_status WHERE document_id = ?", (document_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+    
+    def get_pending_documents(self) -> list:
+        """Get all documents with pending status, joined with employee and company info."""
+        query = """
+        SELECT ds.id as status_id, ds.document_id, ds.status, ds.status_updated_at, ds.created_at as status_created_at,
+               d.form_type, d.file_name, d.generated_at, d.file_path,
+               e.full_name as employee_name, e.id_number as employee_id_number,
+               c.name as company_name
+        FROM document_status ds
+        JOIN documents d ON ds.document_id = d.id
+        LEFT JOIN employees e ON d.employee_id = e.id
+        LEFT JOIN companies c ON e.company_id = c.id
+        WHERE ds.status = 'pending'
+        ORDER BY ds.created_at ASC
+        """
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    
+    def update_document_status(self, document_id: str, new_status: str) -> bool:
+        """Update the status of a document."""
+        now_iso = datetime.now(timezone.utc).isoformat()
+        query = "UPDATE document_status SET status = ?, status_updated_at = ? WHERE document_id = ?"
+        self.conn.execute(query, (new_status, now_iso, document_id))
+        self.conn.commit()
+        return True
+    
+    def auto_reject_expired(self, days: int = EXPIRY_DAYS) -> int:
+        """Auto-reject pending documents older than the specified number of days.
+        Returns the number of records updated."""
+        from datetime import timedelta
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        
+        query = """
+        UPDATE document_status 
+        SET status = 'rejected', status_updated_at = ?
+        WHERE status = 'pending' AND created_at < ?
+        """
+        now_iso = datetime.now(timezone.utc).isoformat()
+        cursor = self.conn.execute(query, (now_iso, cutoff))
+        self.conn.commit()
+        return cursor.rowcount
 
     def close(self):
         self.conn.close()

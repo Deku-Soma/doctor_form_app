@@ -121,6 +121,24 @@ class HomePage(QWidget):
         employees_btn.clicked.connect(lambda: self.main_window.show_page("employees"))
         header_layout.addWidget(employees_btn)
         
+        # Pending Review button
+        pending_btn = QPushButton("📋 Pending Review")
+        pending_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f39c12;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 10px 20px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #e67e22;
+            }
+        """)
+        pending_btn.clicked.connect(lambda: self.main_window.show_page("pending_review"))
+        header_layout.addWidget(pending_btn)
+        
         # Logout button
         logout_btn = QPushButton("Logout")
         logout_btn.setMaximumWidth(100)

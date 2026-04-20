@@ -107,9 +107,19 @@ class FormAnnexure3(QWidget):
         form_layout.addRow(clear_btn)
 
         # Buttons
-        submit_btn = QPushButton("Submit & Save")
-        submit_btn.clicked.connect(self.submit_form)
-        form_layout.addRow(submit_btn)
+        btn_layout = QHBoxLayout()
+        
+        approve_btn = QPushButton("✅ Approve")
+        approve_btn.setStyleSheet("background-color: #1abc9c; color: white; padding: 10px 20px; font-weight: bold; border-radius: 5px;")
+        approve_btn.clicked.connect(lambda: self.submit_form(status="approved"))
+        btn_layout.addWidget(approve_btn)
+        
+        pending_btn = QPushButton("⏳ Needs Doctor Approval")
+        pending_btn.setStyleSheet("background-color: #f39c12; color: white; padding: 10px 20px; font-weight: bold; border-radius: 5px;")
+        pending_btn.clicked.connect(lambda: self.submit_form(status="pending"))
+        btn_layout.addWidget(pending_btn)
+        
+        form_layout.addRow(btn_layout)
 
         back_btn = QPushButton("Back to Home")
         back_btn.clicked.connect(lambda: self.main_window.go_to_home())
@@ -121,7 +131,7 @@ class FormAnnexure3(QWidget):
         layout.addWidget(scroll)
         self.setLayout(layout)
 
-    def submit_form(self):
+    def submit_form(self, status="approved"):
         # Get fitness status
         fitness = ""
         if self.fitness_status["fit"].isChecked():
@@ -183,9 +193,10 @@ class FormAnnexure3(QWidget):
                 from pages.template_generator import generate_pdf_for_form
                 # Pass employee data for file organization
                 emp_data = getattr(self.main_window, 'selected_employee', None)
-                generate_pdf_for_form("annexure3_cwb", data, employee_data=emp_data)
+                generate_pdf_for_form("annexure3_cwb", data, employee_data=emp_data, status=status)
                 
-                QMessageBox.information(self, "Success", "Annexure 3 saved successfully!\nPDF generated in employee folder.")
+                status_msg = "approved" if status == "approved" else "sent for doctor approval"
+                QMessageBox.information(self, "Success", f"Annexure 3 saved successfully ({status_msg})!\nPDF generated in employee folder.")
             except Exception as pdf_error:
                 print(f"PDF generation failed: {pdf_error}")
                 import traceback

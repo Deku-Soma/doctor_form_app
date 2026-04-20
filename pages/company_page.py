@@ -164,13 +164,16 @@ class CompanyPage(QWidget):
         
         # Companies Table
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["Name", "Email", "Phone", "Address", "Actions"])
+        self.table.setColumnCount(7)
+        self.table.setHorizontalHeaderLabels(["Name", "Email", "Phone", "Address", "Edit", "Delete", "Employees"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeToContents)
+        self.table.verticalHeader().setDefaultSectionSize(50)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setAlternatingRowColors(True)
         self.table.setStyleSheet("""
@@ -216,29 +219,41 @@ class CompanyPage(QWidget):
             self.table.setItem(row, 2, QTableWidgetItem(company.get('contact_phone') or '-'))
             self.table.setItem(row, 3, QTableWidgetItem(company.get('address') or '-'))
             
-            # Actions buttons
-            actions_widget = QWidget()
-            actions_layout = QHBoxLayout()
-            actions_layout.setContentsMargins(5, 2, 5, 2)
-            actions_layout.setSpacing(5)
-            
+            # Edit button
+            edit_widget = QWidget()
+            edit_layout = QHBoxLayout()
+            edit_layout.setContentsMargins(5, 5, 5, 5)
             edit_btn = QPushButton("Edit")
+            edit_btn.setMinimumHeight(35)
             edit_btn.setStyleSheet("background-color: #3498db; color: white; padding: 5px 10px; border-radius: 3px;")
             edit_btn.clicked.connect(lambda checked, c=company: self.edit_company(c))
-            actions_layout.addWidget(edit_btn)
+            edit_layout.addWidget(edit_btn)
+            edit_widget.setLayout(edit_layout)
+            self.table.setCellWidget(row, 4, edit_widget)
             
+            # Delete button
+            delete_widget = QWidget()
+            delete_layout = QHBoxLayout()
+            delete_layout.setContentsMargins(5, 5, 5, 5)
             delete_btn = QPushButton("Delete")
+            delete_btn.setMinimumHeight(35)
             delete_btn.setStyleSheet("background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 3px;")
             delete_btn.clicked.connect(lambda checked, c=company: self.delete_company(c))
-            actions_layout.addWidget(delete_btn)
+            delete_layout.addWidget(delete_btn)
+            delete_widget.setLayout(delete_layout)
+            self.table.setCellWidget(row, 5, delete_widget)
             
+            # Employees button
+            employees_widget = QWidget()
+            employees_layout = QHBoxLayout()
+            employees_layout.setContentsMargins(5, 5, 5, 5)
             employees_btn = QPushButton("Employees")
+            employees_btn.setMinimumHeight(35)
             employees_btn.setStyleSheet("background-color: #9b59b6; color: white; padding: 5px 10px; border-radius: 3px;")
             employees_btn.clicked.connect(lambda checked, c=company: self.view_employees(c))
-            actions_layout.addWidget(employees_btn)
-            
-            actions_widget.setLayout(actions_layout)
-            self.table.setCellWidget(row, 4, actions_widget)
+            employees_layout.addWidget(employees_btn)
+            employees_widget.setLayout(employees_layout)
+            self.table.setCellWidget(row, 6, employees_widget)
     
     def add_company(self):
         """Open dialog to add new company."""

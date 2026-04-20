@@ -23,6 +23,7 @@ from pages.forms.form_complete_wellbeing import FormCompleteWellbeing
 from pages.forms.form_annexure3 import FormAnnexure3
 from pages.company_page import CompanyPage
 from pages.employee_page import EmployeePage
+from pages.pending_review_page import PendingReviewPage
 import sys
 import os 
 import json
@@ -62,6 +63,7 @@ class MainApp(QStackedWidget):
         # Management pages
         self.companyPage = CompanyPage(self)
         self.employeePage = EmployeePage(self)
+        self.pendingReviewPage = PendingReviewPage(self)
         
         # For passing selected company to employee page
         self.selected_company = None
@@ -85,6 +87,7 @@ class MainApp(QStackedWidget):
         self.addWidget(self.formAnnexure3)
         self.addWidget(self.companyPage)
         self.addWidget(self.employeePage)
+        self.addWidget(self.pendingReviewPage)
 
         self.setCurrentWidget(self.login_page)
 
@@ -131,6 +134,8 @@ class MainApp(QStackedWidget):
             self.setCurrentWidget(self.companyPage)
         elif page_name == "employees":
             self.setCurrentWidget(self.employeePage)
+        elif page_name == "pending_review":
+            self.setCurrentWidget(self.pendingReviewPage)
     
     def fetch_session(self):
         cwd = os.getcwd()
