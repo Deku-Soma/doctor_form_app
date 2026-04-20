@@ -5,6 +5,16 @@ get colour pallat from tash
 get all the documents we need 
 ammend the document styles
 '''
+
+# ── Suppress "Fontconfig error: Cannot load default config file" on Windows ──
+# WeasyPrint's GTK/Cairo dependency looks for a fontconfig config that doesn't
+# exist on Windows. Setting FONTCONFIG_FILE to a valid (empty) path before any
+# GTK-linked lib loads prevents the stderr noise. Must be before all imports.
+import os
+os.environ.setdefault("FONTCONFIG_FILE", "")
+os.environ.setdefault("FONTCONFIG_PATH", "")
+# ─────────────────────────────────────────────────────────────────────────────
+
 from PyQt5.QtWidgets import QApplication, QStackedWidget
 from pages.login_page import LoginPage
 from pages.home_page import HomePage
