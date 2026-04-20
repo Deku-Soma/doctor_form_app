@@ -167,3 +167,38 @@ def sync_to_cloud():
             return False
             
     return True
+
+
+def sync_company_templates_to_cloud(company_id: str) -> bool:
+    """
+    Push unsynced company_templates rows for this company to Supabase.
+    Follows the same last_synced_at IS NULL pattern as sync_to_cloud().
+    Call in a background thread after save_company_template().
+    """
+    if not supabase:
+        return False
+
+    unsynced = local_db.get_unsynced_company_templates(company_id)
+    if not unsynced:
+        return True
+
+    for record in unsynced:
+        try:
+            payload = {
+                "id":           record["id"],
+                "company_id":   record["company_id"],
+                "form_type":    record["form_type"],
+                "field_key":    record["field_key"],
+                "field_value":  record["field_value"],
+                "field_label":  record["field_label"],
+                "is_locked":    bool(record["is_locked"]),
+                "last_updated": record["last_updated"],
+            }
+            supabase.table("company_templates").upsert(payload).execute()
+            local_db.mark_template_synced(record["id"])
+            print(f"Synced template record {record['id']}")
+        except Exception as e:
+            print(f"Failed to sync template record {record['id']}: {e}")
+            return False
+
+    return True

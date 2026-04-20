@@ -157,3 +157,13 @@ QHeaderView::section {
 QLabel {
     background-color: transparent;
 }
+
+/* --- Autofill Tooltip (company template pre-fill indicator) --- */
+QToolTip {
+    background-color: #1D9E75;
+    color: #ffffff;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}

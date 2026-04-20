@@ -8,26 +8,46 @@ from PyQt5.QtCore import QDate
 from pages.signiture import SignaturePad
 import base64
 from Utility.local_db import local_db
+from Utility.autofill import build_autofill_context, apply_autofill_to_form
+from Utility.template_fields import COMPANY_TEMPLATE_FIELDS, UNIVERSAL_TEMPLATE_FIELDS
+from db import sync_company_templates_to_cloud
 import db
 import threading
 import os
 
 
+def _capture_company_template_if_first(company_id, form_type, data):
+    if not company_id: return
+    if local_db.get_company_template(company_id, form_type): return
+    capturable_keys = list(set(COMPANY_TEMPLATE_FIELDS.get(form_type, []) + UNIVERSAL_TEMPLATE_FIELDS))
+    def _get(d, key):
+        if key in d: return d[key]
+        for v in d.values():
+            if isinstance(v, dict) and key in v: return v[key]
+        return None
+    fields_to_save = {k: {"value": _get(data, k), "label": k.replace("_", " ").title(), "is_locked": False} for k in capturable_keys if _get(data, k)}
+    if fields_to_save:
+        local_db.save_company_template(company_id, form_type, fields_to_save)
+        threading.Thread(target=sync_company_templates_to_cloud, args=(company_id,), daemon=True).start()
+
+
+
 class FormHotColdExposure(QWidget):
+    FORM_TYPE = "hot_cold_exposure"
+
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
+        self.fields = {}
         self.init_ui()
 
     def showEvent(self, event):
-        """Pre-fill employee details if selected."""
+        """Pre-fill employee and company template data."""
         super().showEvent(event)
-        if hasattr(self.main_window, 'selected_employee') and self.main_window.selected_employee:
-            emp = self.main_window.selected_employee
-            self.first_name.setText(emp.get('full_name', '').split()[0])
-            self.last_name.setText(" ".join(emp.get('full_name', '').split()[1:]))
-            self.id_number.setText(emp.get('id_number', ''))
-            self.job_title.setText(emp.get('job_title', ''))
+        employee = getattr(self.main_window, 'selected_employee', None) or {}
+        company  = getattr(self.main_window, 'selected_company', None) or {}
+        context  = build_autofill_context(company.get('id', ''), employee, self.FORM_TYPE)
+        apply_autofill_to_form(self, context)
 
     def init_ui(self):
         scroll = QScrollArea()
@@ -43,12 +63,17 @@ class FormHotColdExposure(QWidget):
         # Part A: Employee Information
         form_layout.addRow(QLabel("<b>Part A: EMPLOYEE INFORMATION</b>"))
         self.first_name = QLineEdit()
-        self.last_name = QLineEdit()
-        self.id_number = QLineEdit()
-        self.telephone = QLineEdit()
+        self.last_name  = QLineEdit()
+        self.id_number  = QLineEdit()
+        self.telephone  = QLineEdit()
         self.date = QDateEdit()
         self.date.setDate(QDate.currentDate())
         self.job_title = QLineEdit()
+        # Register for autofill
+        self.fields["first_name"] = self.first_name
+        self.fields["surname"]    = self.last_name
+        self.fields["id_number"]  = self.id_number
+        self.fields["job_title"]  = self.job_title
 
         form_layout.addRow("First Name:", self.first_name)
         form_layout.addRow("Last Name:", self.last_name)
@@ -244,7 +269,10 @@ class FormHotColdExposure(QWidget):
             
             sub_id = local_db.save_submission("hot_cold_exposure", data, user_id=user_id)
             print(f"Saved locally with ID: {sub_id}")
-            
+
+            company = getattr(self.main_window, 'selected_company', None) or {}
+            _capture_company_template_if_first(company.get('id', ''), self.FORM_TYPE, data)
+
             sync_thread = threading.Thread(target=db.sync_to_cloud)
             sync_thread.start()
             

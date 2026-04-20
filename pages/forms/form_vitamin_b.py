@@ -9,24 +9,45 @@ from pages.signiture import SignaturePad
 from pages.template_generator import generate_html_pdf
 import base64
 from Utility.local_db import local_db
+from Utility.autofill import build_autofill_context, apply_autofill_to_form
+from Utility.template_fields import COMPANY_TEMPLATE_FIELDS, UNIVERSAL_TEMPLATE_FIELDS
+from db import sync_company_templates_to_cloud
 import db
 import threading
 
 
+def _capture_company_template_if_first(company_id, form_type, data):
+    if not company_id: return
+    if local_db.get_company_template(company_id, form_type): return
+    capturable_keys = list(set(COMPANY_TEMPLATE_FIELDS.get(form_type, []) + UNIVERSAL_TEMPLATE_FIELDS))
+    def _get(d, key):
+        if key in d: return d[key]
+        for v in d.values():
+            if isinstance(v, dict) and key in v: return v[key]
+        return None
+    fields_to_save = {k: {"value": _get(data, k), "label": k.replace("_", " ").title(), "is_locked": False} for k in capturable_keys if _get(data, k)}
+    if fields_to_save:
+        local_db.save_company_template(company_id, form_type, fields_to_save)
+        threading.Thread(target=sync_company_templates_to_cloud, args=(company_id,), daemon=True).start()
+
+
+
 class FormVitaminB(QWidget):
+    FORM_TYPE = "vitamin_b_consent"
+
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
+        self.fields = {}
         self.init_ui()
 
     def showEvent(self, event):
-        """Pre-fill employee details if selected."""
+        """Pre-fill employee and company template data."""
         super().showEvent(event)
-        if hasattr(self.main_window, 'selected_employee') and self.main_window.selected_employee:
-            emp = self.main_window.selected_employee
-            self.name_surname.setText(emp.get('full_name', ''))
-            self.id_number.setText(emp.get('id_number', ''))
-            self.company.setText(emp.get('company_name', ''))
+        employee = getattr(self.main_window, 'selected_employee', None) or {}
+        company  = getattr(self.main_window, 'selected_company', None) or {}
+        context  = build_autofill_context(company.get('id', ''), employee, self.FORM_TYPE)
+        apply_autofill_to_form(self, context)
 
     def init_ui(self):
         # Scroll area
@@ -65,7 +86,10 @@ class FormVitaminB(QWidget):
         # Patient Details
         form_layout.addRow(QLabel("<b>Patient Details</b>"))
         self.name_surname = QLineEdit()
-        self.id_number = QLineEdit()
+        self.id_number    = QLineEdit()
+        # Register for autofill
+        self.fields["full_name_surname"] = self.name_surname
+        self.fields["id_number"]         = self.id_number
 
         form_layout.addRow("Name & Surname:", self.name_surname)
         form_layout.addRow("ID Number:", self.id_number)
@@ -154,7 +178,10 @@ class FormVitaminB(QWidget):
             
             sub_id = local_db.save_submission("vitamin_b_consent", data, user_id=user_id)
             print(f"Saved locally with ID: {sub_id}")
-            
+
+            company = getattr(self.main_window, 'selected_company', None) or {}
+            _capture_company_template_if_first(company.get('id', ''), self.FORM_TYPE, data)
+
             # Trigger sync in background
             sync_thread = threading.Thread(target=db.sync_to_cloud)
             sync_thread.start()

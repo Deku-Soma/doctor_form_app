@@ -123,6 +123,24 @@ class LocalDB:
         self.conn.execute(document_status_query)
         self.conn.commit()
 
+        # Company form templates table
+        company_templates_query = """
+        CREATE TABLE IF NOT EXISTS company_templates (
+            id TEXT PRIMARY KEY,
+            company_id TEXT NOT NULL,
+            form_type TEXT NOT NULL,
+            field_key TEXT NOT NULL,
+            field_value TEXT,
+            field_label TEXT,
+            is_locked INTEGER DEFAULT 0,
+            last_updated TEXT,
+            last_synced_at TEXT,
+            UNIQUE(company_id, form_type, field_key)
+        )
+        """
+        self.conn.execute(company_templates_query)
+        self.conn.commit()
+
     def upsert_user(self, user_data):
         """
         Cache user data locally.
@@ -481,6 +499,90 @@ class LocalDB:
 
     def close(self):
         self.conn.close()
+
+    # ============== COMPANY TEMPLATE METHODS ==============
+
+    def save_company_template(self, company_id: str, form_type: str, fields: dict):
+        """
+        Upsert template fields for a company+form combination.
+        `fields` is a dict of {field_key: {"value": ..., "label": ..., "is_locked": bool}}
+        """
+        now_iso = datetime.now(timezone.utc).isoformat()
+        for field_key, meta in fields.items():
+            record_id = str(ulid.ULID())
+            query = """
+            INSERT INTO company_templates
+                (id, company_id, form_type, field_key, field_value, field_label, is_locked, last_updated, last_synced_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)
+            ON CONFLICT(company_id, form_type, field_key) DO UPDATE SET
+                field_value    = excluded.field_value,
+                field_label    = excluded.field_label,
+                is_locked      = excluded.is_locked,
+                last_updated   = excluded.last_updated,
+                last_synced_at = NULL
+            """
+            self.conn.execute(query, (
+                record_id, company_id, form_type, field_key,
+                str(meta["value"]),
+                meta.get("label", field_key.replace("_", " ").title()),
+                1 if meta.get("is_locked") else 0,
+                now_iso
+            ))
+        self.conn.commit()
+
+    def get_company_template(self, company_id: str, form_type: str) -> dict:
+        """
+        Returns {field_key: {"value": ..., "label": ..., "is_locked": bool}}
+        Returns empty dict if no template exists yet.
+        """
+        cursor = self.conn.execute(
+            "SELECT field_key, field_value, field_label, is_locked FROM company_templates "
+            "WHERE company_id = ? AND form_type = ?",
+            (company_id, form_type)
+        )
+        rows = cursor.fetchall()
+        return {
+            row["field_key"]: {
+                "value":     row["field_value"],
+                "label":     row["field_label"],
+                "is_locked": bool(row["is_locked"])
+            }
+            for row in rows
+        }
+
+    def list_company_templates(self, company_id: str) -> list:
+        """Returns list of distinct form_type strings that have a saved template for this company."""
+        cursor = self.conn.execute(
+            "SELECT DISTINCT form_type FROM company_templates WHERE company_id = ? ORDER BY form_type",
+            (company_id,)
+        )
+        return [row["form_type"] for row in cursor.fetchall()]
+
+    def get_unsynced_company_templates(self, company_id: str) -> list:
+        """Used by sync to find rows not yet pushed to Supabase."""
+        cursor = self.conn.execute(
+            "SELECT * FROM company_templates WHERE company_id = ? AND last_synced_at IS NULL",
+            (company_id,)
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def mark_template_synced(self, record_id: str):
+        """Mark a company_templates row as synced to Supabase."""
+        now_iso = datetime.now(timezone.utc).isoformat()
+        self.conn.execute(
+            "UPDATE company_templates SET last_synced_at = ? WHERE id = ?",
+            (now_iso, record_id)
+        )
+        self.conn.commit()
+
+    def delete_company_template_field(self, company_id: str, form_type: str, field_key: str):
+        """Remove a single field from a company template."""
+        self.conn.execute(
+            "DELETE FROM company_templates WHERE company_id = ? AND form_type = ? AND field_key = ?",
+            (company_id, form_type, field_key)
+        )
+        self.conn.commit()
+
 
 # Singleton instance
 local_db = LocalDB()

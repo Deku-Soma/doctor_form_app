@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from Utility.local_db import local_db
+from pages.company_template_dialog import CompanyTemplateDialog
 
 
 class AddCompanyDialog(QDialog):
@@ -164,8 +165,8 @@ class CompanyPage(QWidget):
         
         # Companies Table
         self.table = QTableWidget()
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["Name", "Email", "Phone", "Address", "Edit", "Delete", "Employees"])
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels(["Name", "Email", "Phone", "Address", "Edit", "Delete", "Employees", "Templates"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
@@ -173,6 +174,7 @@ class CompanyPage(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeToContents)
         self.table.verticalHeader().setDefaultSectionSize(50)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setAlternatingRowColors(True)
@@ -254,6 +256,18 @@ class CompanyPage(QWidget):
             employees_layout.addWidget(employees_btn)
             employees_widget.setLayout(employees_layout)
             self.table.setCellWidget(row, 6, employees_widget)
+
+            # Form Templates button
+            templates_widget = QWidget()
+            templates_layout = QHBoxLayout()
+            templates_layout.setContentsMargins(5, 5, 5, 5)
+            templates_btn = QPushButton("Templates")
+            templates_btn.setMinimumHeight(35)
+            templates_btn.setStyleSheet("background-color: #1D9E75; color: white; padding: 5px 10px; border-radius: 3px;")
+            templates_btn.clicked.connect(lambda checked, c=company: self.open_templates(c))
+            templates_layout.addWidget(templates_btn)
+            templates_widget.setLayout(templates_layout)
+            self.table.setCellWidget(row, 7, templates_widget)
     
     def add_company(self):
         """Open dialog to add new company."""
@@ -291,7 +305,16 @@ class CompanyPage(QWidget):
         # Store selected company for employee page
         self.main_window.selected_company = company
         self.main_window.show_page("employees")
-    
+
+    def open_templates(self, company):
+        """Open the Form Templates dialog for this company."""
+        dialog = CompanyTemplateDialog(
+            company_id=company['id'],
+            company_name=company['name'],
+            parent=self
+        )
+        dialog.exec_()
+
     def go_back(self):
         """Return to home page."""
         self.main_window.show_page("home")
