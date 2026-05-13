@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthCorp360 — Certificate of Fitness</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="offline-banner" role="alert">⚠️ Offline — data will sync when reconnected.</div>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">HealthCorp<span class="dot">360</span></a>
+    <div class="navbar-actions"><a href="/home.html" class="btn btn-ghost btn-sm">← Dashboard</a></div>
+  </nav>
+
+  <main class="container page-content">
+    <div class="page-header">
+      <h1>Certificate of Fitness</h1>
+      <p>Complete all sections. Signature required from the occupational health practitioner.</p>
+    </div>
+    <div id="form-alert"></div>
+
+    <form id="main-form" novalidate>
+      <!-- Personal Details -->
+      <div class="form-section">
+        <h3>Personal Details</h3>
+        <div class="form-grid">
+          <div class="field"><label for="first_name">First Name</label><input id="first_name" name="first_name" type="text"></div>
+          <div class="field"><label for="surname">Surname</label><input id="surname" name="surname" type="text"></div>
+          <div class="field"><label for="id_pp_number">ID / Passport Number</label><input id="id_pp_number" name="id_pp_number" type="text"></div>
+          <div class="field"><label for="company">Company</label><input id="company" name="company" type="text"></div>
+          <div class="field"><label for="occupation">Occupation</label><input id="occupation" name="occupation" type="text"></div>
+          <div class="field"><label for="date_of_examination">Date of Examination</label><input id="date_of_examination" name="date_of_examination" type="date"></div>
+          <div class="field"><label for="date_of_expiry">Date of Expiry</label><input id="date_of_expiry" name="date_of_expiry" type="date"></div>
+        </div>
+      </div>
+
+      <!-- Type of Medical -->
+      <div class="form-section">
+        <h3>Type of Medical</h3>
+        <div class="check-group">
+          <label><input type="checkbox" name="medical_type_pre_employment" value="1"> Pre-employment</label>
+          <label><input type="checkbox" name="medical_type_baseline" value="1"> Baseline</label>
+          <label><input type="checkbox" name="medical_type_periodical" value="1"> Periodical</label>
+          <label><input type="checkbox" name="medical_type_exit" value="1"> Exit</label>
+        </div>
+      </div>
+
+      <!-- Outcome -->
+      <div class="form-section">
+        <h3>Outcome of Medical Examination</h3>
+        <div class="field">
+          <div class="radio-group" style="flex-direction:column;align-items:flex-start;">
+            <label><input type="radio" name="outcome" value="Fit for duty"> Fit for duty</label>
+            <label><input type="radio" name="outcome" value="Fit for duty, with conditions"> Fit for duty, with conditions</label>
+            <label><input type="radio" name="outcome" value="Fit for duty, with restrictions"> Fit for duty, with restrictions</label>
+            <label><input type="radio" name="outcome" value="Not fit for duty, requires referral and follow-up"> Not fit for duty, requires referral and follow-up</label>
+          </div>
+        </div>
+        <div class="field"><label for="outcome_comments">Comments</label><textarea id="outcome_comments" name="outcome_comments" rows="3"></textarea></div>
+      </div>
+
+      <!-- Tests Conducted -->
+      <div class="form-section">
+        <h3>Tests Conducted</h3>
+        <div class="check-group" style="flex-wrap:wrap;">
+          <label><input type="checkbox" name="test_physical_examination" value="1"> Physical Examination</label>
+          <label><input type="checkbox" name="test_blood_pressure" value="1"> Blood Pressure</label>
+          <label><input type="checkbox" name="test_glucose" value="1"> Glucose</label>
+          <label><input type="checkbox" name="test_urine_screening" value="1"> Urine Screening</label>
+          <label><input type="checkbox" name="test_audiometry" value="1"> Audiometry</label>
+          <label><input type="checkbox" name="test_lung_function" value="1"> Lung Function</label>
+          <label><input type="checkbox" name="test_bmi" value="1"> BMI (Height &amp; Weight)</label>
+          <label><input type="checkbox" name="test_drug_test" value="1"> Drug Test</label>
+          <label><input type="checkbox" name="test_vision_screening" value="1"> Vision Screening</label>
+          <label><input type="checkbox" name="test_hiv" value="1"> HIV Test</label>
+          <label><input type="checkbox" name="test_cholesterol" value="1"> Cholesterol</label>
+          <label><input type="checkbox" name="test_other" value="1"> Other</label>
+        </div>
+        <div class="field mt-2"><label for="tests_comments">Test Comments</label><textarea id="tests_comments" name="tests_comments" rows="2"></textarea></div>
+      </div>
+
+      <!-- Questionnaires -->
+      <div class="form-section">
+        <h3>Additional Questionnaires Completed</h3>
+        <div class="check-group">
+          <label><input type="checkbox" name="q_working_at_heights" value="1"> Working at Heights</label>
+          <label><input type="checkbox" name="q_shift_work" value="1"> Shift Work</label>
+          <label><input type="checkbox" name="q_psycho_social" value="1"> Psycho-social</label>
+          <label><input type="checkbox" name="q_general_health" value="1"> General Health</label>
+          <label><input type="checkbox" name="q_other" value="1"> Other</label>
+        </div>
+      </div>
+
+      <!-- Practitioner -->
+      <div class="form-section">
+        <h3>Occupational Health Practitioner</h3>
+        <div class="form-grid">
+          <div class="field"><label for="practitioner_name">Practitioner Name</label><input id="practitioner_name" name="practitioner_name" type="text"></div>
+          <div class="field"><label for="practitioner_reg_numbers">HPCSA / SANC / PR Number</label><input id="practitioner_reg_numbers" name="practitioner_reg_numbers" type="text"></div>
+          <div class="field"><label for="practitioner_date">Date</label><input id="practitioner_date" name="practitioner_date" type="date"></div>
+          <div class="field"><label for="practitioner_address">Practice Address</label><input id="practitioner_address" name="practitioner_address" type="text"></div>
+        </div>
+        <div class="field">
+          <label>Practitioner Signature</label>
+          <div class="signature-wrapper"><canvas id="sig-canvas"></canvas></div>
+          <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-sig">Clear</button></div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="approve-btn">
+          <span class="spinner"></span><span class="btn-label">✅ Approve</span>
+        </button>
+        <button type="button" class="btn btn-secondary" id="pending-btn">⏳ Needs Doctor Approval</button>
+      </div>
+    </form>
+
+    <div id="success-panel" class="hidden mt-2">
+      <div class="alert alert-success" id="success-msg"></div>
+      <a id="view-pdf-btn" href="#" target="_blank" class="btn btn-secondary btn-sm mt-1">📄 View PDF</a>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/signature.js"></script>
+  <script>
+    const FORM_TYPE = 'certificate_of_fitness';
+    let sigPad;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!redirectIfNoSession()) return;
+      sigPad = initSignaturePad('sig-canvas');
+      document.getElementById('clear-sig').addEventListener('click', () => sigPad.clear());
+
+      const today = new Date().toISOString().slice(0,10);
+      document.getElementById('date_of_examination').value = today;
+      document.getElementById('practitioner_date').value   = today;
+      // Expiry defaults to 1 year ahead
+      const expiry = new Date(); expiry.setFullYear(expiry.getFullYear() + 1);
+      document.getElementById('date_of_expiry').value = expiry.toISOString().slice(0,10);
+
+      const company  = getSelectedCompany();
+      const employee = getSelectedEmployee();
+      if (company && employee) {
+        try {
+          const { autofill } = await apiFetch(`/forms/${FORM_TYPE}/autofill?company_id=${company.id}&employee_id=${employee.id}`);
+          applyAutofill(document.getElementById('main-form'), autofill);
+        } catch(e) { console.warn('Autofill failed:', e.message); }
+      }
+      document.getElementById('pending-btn').addEventListener('click', () => submitForm('pending'));
+    });
+
+    document.getElementById('main-form').addEventListener('submit', e => { e.preventDefault(); submitForm('approved'); });
+
+    async function submitForm(status) {
+      const btn = status === 'approved' ? document.getElementById('approve-btn') : document.getElementById('pending-btn');
+      setButtonLoading(btn, true);
+      const f = document.getElementById('main-form');
+      const fd = new FormData(f);
+      const data = {};
+      // Gather all named inputs (checkboxes use value "1" when checked)
+      f.querySelectorAll('[name]').forEach(el => {
+        if (el.type === 'checkbox') { data[el.name] = el.checked ? '1' : ''; }
+        else if (el.type === 'radio') { if (el.checked) data[el.name] = el.value; }
+        else { data[el.name] = el.value; }
+      });
+      data.practitioner_signature_base64 = sigPad ? sigPad.toBase64() : '';
+      data.name = data.first_name;
+      data.id_number = data.id_pp_number;
+
+      const company  = getSelectedCompany() || {};
+      const employee = getSelectedEmployee() || {};
+      try {
+        const result = await apiFetch(`/forms/${FORM_TYPE}/submit`, {
+          method: 'POST',
+          body: JSON.stringify({ employee_id: employee.id || '', company_id: company.id || '', data, status, employee_data: employee, user_id: (getSession()||{}).id||null }),
+        });
+        document.getElementById('success-msg').textContent = `✅ Saved (${status})! ID: ${result.submission_id||'—'}`;
+        if (result.pdf_path) document.getElementById('view-pdf-btn').href = `/documents/pdf?path=${encodeURIComponent(result.pdf_path)}`;
+        document.getElementById('success-panel').classList.remove('hidden');
+        f.reset(); sigPad && sigPad.clear();
+      } catch(err) {
+        showAlert(document.getElementById('form-alert'), 'error', err.message);
+      } finally { setButtonLoading(btn, false); }
+    }
+  </script>
+</body>
+</html>

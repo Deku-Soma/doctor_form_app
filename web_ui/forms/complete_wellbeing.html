@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthCorp360 — Complete Wellbeing</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="offline-banner" role="alert">⚠️ Offline</div>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">HealthCorp<span class="dot">360</span></a>
+    <div class="navbar-actions"><a href="/home.html" class="btn btn-ghost btn-sm">← Dashboard</a></div>
+  </nav>
+  <main class="container page-content">
+    <div class="page-header"><h1>Complete Wellbeing — Medical Test Results</h1></div>
+    <div id="form-alert"></div>
+    <form id="main-form" novalidate>
+      <div class="form-section">
+        <h3>Patient Details</h3>
+        <div class="form-grid">
+          <div class="field"><label for="name">First Name</label><input id="name" name="name" type="text"></div>
+          <div class="field"><label for="surname">Surname</label><input id="surname" name="surname" type="text"></div>
+          <div class="field"><label for="id_number">ID Number</label><input id="id_number" name="id_number" type="text"></div>
+          <div class="field"><label for="employer">Employer</label><input id="employer" name="employer" type="text"></div>
+          <div class="field"><label for="job_title">Job Title</label><input id="job_title" name="job_title" type="text"></div>
+          <div class="field"><label for="exam_date">Examination Date</label><input id="exam_date" name="exam_date" type="date"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Tests Conducted</h3>
+        <div class="form-grid">
+          <div class="field"><label for="glucose">Glucose</label><input id="glucose" name="glucose" type="text"></div>
+          <div class="field"><label for="cholesterol">Cholesterol</label><input id="cholesterol" name="cholesterol" type="text"></div>
+          <div class="field"><label for="blood_pressure">Blood Pressure</label><input id="blood_pressure" name="blood_pressure" type="text"></div>
+          <div class="field"><label for="weight">Weight (kg)</label><input id="weight" name="weight" type="text"></div>
+          <div class="field"><label for="height">Height (cm)</label><input id="height" name="height" type="text"></div>
+          <div class="field"><label for="audiometry">Audiometry</label><input id="audiometry" name="audiometry" type="text"></div>
+          <div class="field"><label for="urine_analysis">Urine Analysis</label><input id="urine_analysis" name="urine_analysis" type="text"></div>
+          <div class="field"><label for="lung_function">Lung Function</label><input id="lung_function" name="lung_function" type="text"></div>
+          <div class="field"><label for="vision">Vision</label><input id="vision" name="vision" type="text"></div>
+          <div class="field"><label for="working_at_heights">Working at Heights</label><input id="working_at_heights" name="working_at_heights" type="text"></div>
+          <div class="field"><label for="environment_questionnaire">Hot/Cold Environments</label><input id="environment_questionnaire" name="environment_questionnaire" type="text"></div>
+          <div class="field"><label for="psychosocial_questionnaire">Psycho-social</label><input id="psychosocial_questionnaire" name="psychosocial_questionnaire" type="text"></div>
+          <div class="field"><label for="musculoskeletal_questionnaire">Musculoskeletal</label><input id="musculoskeletal_questionnaire" name="musculoskeletal_questionnaire" type="text"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Comments / Notes</h3>
+        <div class="field"><textarea id="comments" name="comments" rows="4"></textarea></div>
+      </div>
+      <div class="form-section">
+        <h3>Employee Signature</h3>
+        <div class="signature-wrapper"><canvas id="sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-sig">Clear</button></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="approve-btn"><span class="spinner"></span><span class="btn-label">✅ Approve</span></button>
+        <button type="button" class="btn btn-secondary" id="pending-btn">⏳ Needs Doctor Approval</button>
+      </div>
+    </form>
+    <div id="success-panel" class="hidden mt-2">
+      <div class="alert alert-success" id="success-msg"></div>
+      <a id="view-pdf-btn" href="#" target="_blank" class="btn btn-secondary btn-sm mt-1">📄 View PDF</a>
+    </div>
+  </main>
+  <script src="/static/app.js"></script><script src="/static/signature.js"></script>
+  <script>
+    const FORM_TYPE = 'complete_wellbeing'; let sigPad;
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!redirectIfNoSession()) return;
+      sigPad = initSignaturePad('sig-canvas');
+      document.getElementById('clear-sig').onclick = () => sigPad.clear();
+      document.getElementById('exam_date').value = new Date().toISOString().slice(0,10);
+      const co = getSelectedCompany(), emp = getSelectedEmployee();
+      if (co && emp) { try { const {autofill} = await apiFetch(`/forms/${FORM_TYPE}/autofill?company_id=${co.id}&employee_id=${emp.id}`); applyAutofill(document.getElementById('main-form'), autofill); } catch(e){} }
+      document.getElementById('pending-btn').onclick = () => submitForm('pending');
+    });
+    document.getElementById('main-form').onsubmit = e => { e.preventDefault(); submitForm('approved'); };
+    async function submitForm(status) {
+      const btn = document.getElementById(status==='approved'?'approve-btn':'pending-btn');
+      setButtonLoading(btn, true);
+      const data = Object.fromEntries(new FormData(document.getElementById('main-form')));
+      data.signature_base64 = sigPad ? sigPad.toBase64() : '';
+      const co = getSelectedCompany()||{}, emp = getSelectedEmployee()||{};
+      try {
+        const r = await apiFetch(`/forms/${FORM_TYPE}/submit`,{method:'POST',body:JSON.stringify({employee_id:emp.id||'',company_id:co.id||'',data,status,employee_data:emp,user_id:(getSession()||{}).id||null})});
+        document.getElementById('success-msg').textContent = `✅ Saved (${status})! ID: ${r.submission_id||'—'}`;
+        if(r.pdf_path) document.getElementById('view-pdf-btn').href=`/documents/pdf?path=${encodeURIComponent(r.pdf_path)}`;
+        document.getElementById('success-panel').classList.remove('hidden');
+        document.getElementById('main-form').reset(); sigPad&&sigPad.clear();
+      } catch(err) { showAlert(document.getElementById('form-alert'),'error',err.message); }
+      finally { setButtonLoading(btn,false); }
+    }
+  </script>
+</body>
+</html>

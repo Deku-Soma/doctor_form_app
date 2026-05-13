@@ -31,6 +31,30 @@ def _capture_company_template_if_first(company_id, form_type, data):
         threading.Thread(target=sync_company_templates_to_cloud, args=(company_id,), daemon=True).start()
 
 
+def process_submission(employee_id: str, company_id: str, data: dict, status: str = "approved", employee_data: dict = None, user_id: str = None) -> dict:
+    """
+    UI-agnostic form processing for annexure3_cwb.
+    Returns {'success': bool, 'pdf_path': str | None, 'submission_id': str | None, 'error': str | None}
+    All side effects (DB save, PDF write, template sync trigger) happen inside here.
+    """
+    import traceback
+    from pages.template_generator import generate_pdf_for_form
+    try:
+        sub_id = local_db.save_submission("annexure3_cwb", data, user_id=user_id)
+        _capture_company_template_if_first(company_id, "annexure3_cwb", data)
+        threading.Thread(target=db.sync_to_cloud, daemon=True).start()
+
+        pdf_path = None
+        try:
+            pdf_path = generate_pdf_for_form("annexure3_cwb", data, employee_data=employee_data, status=status)
+        except Exception as pdf_err:
+            print(f"[annexure3] PDF generation failed: {pdf_err}")
+            traceback.print_exc()
+
+        return {"success": True, "pdf_path": pdf_path, "submission_id": sub_id, "error": None}
+    except Exception as e:
+        return {"success": False, "pdf_path": None, "submission_id": None, "error": str(e)}
+
 
 class FormAnnexure3(QWidget):
     FORM_TYPE = "annexure3_cwb"
@@ -159,30 +183,24 @@ class FormAnnexure3(QWidget):
         self.setLayout(layout)
 
     def submit_form(self, status="approved"):
-        # Get fitness status
+        # Collect widget values
         fitness = ""
         if self.fitness_status["fit"].isChecked():
             fitness = "Fit"
         elif self.fitness_status["unfit"].isChecked():
             fitness = "Unfit"
 
-        # Save signature
         sig_path = "temp_signature.png"
         self.signature_pad.get_signature_image().save(sig_path)
-
         try:
             with open(sig_path, "rb") as f:
                 sig_base64 = base64.b64encode(f.read()).decode("utf-8")
-            
-            # Cleanup temp file
             if os.path.exists(sig_path):
                 os.remove(sig_path)
-
         except Exception as e:
             print(f"Error encoding signature: {e}")
             sig_base64 = ""
 
-        # Prepare data
         data = {
             "company": self.company.text(),
             "employee_name": self.employee_name.text(),
@@ -198,40 +216,33 @@ class FormAnnexure3(QWidget):
             "exam_date": self.exam_date.date().toString("yyyy-MM-dd"),
             "practice_address": self.practice_address.text(),
             "practitioner_signature": sig_base64,
-            # For database searchability
             "name": self.employee_name.text().split()[0] if self.employee_name.text() else "",
             "surname": " ".join(self.employee_name.text().split()[1:]) if len(self.employee_name.text().split()) > 1 else "",
             "id_number": self.id_pp_number.text()
         }
 
-        # Save to database
-        try:
-            user_session = self.main_window.fetch_session()
-            user_id = user_session.get("id") if user_session else None
-            
-            sub_id = local_db.save_submission("annexure3_cwb", data, user_id=user_id)
-            print(f"Saved locally with ID: {sub_id}")
+        user_session = self.main_window.fetch_session()
+        user_id = user_session.get("id") if user_session else None
+        company = getattr(self.main_window, 'selected_company', None) or {}
+        emp_data = getattr(self.main_window, 'selected_employee', None)
 
-            company = getattr(self.main_window, 'selected_company', None) or {}
-            _capture_company_template_if_first(company.get('id', ''), self.FORM_TYPE, data)
+        result = process_submission(
+            employee_id=emp_data.get("id", "") if emp_data else "",
+            company_id=company.get("id", ""),
+            data=data,
+            status=status,
+            employee_data=emp_data,
+            user_id=user_id,
+        )
 
-            sync_thread = threading.Thread(target=db.sync_to_cloud)
-            sync_thread.start()
-            
-            # Generate PDF
-            try:
-                from pages.template_generator import generate_pdf_for_form
-                # Pass employee data for file organization
-                emp_data = getattr(self.main_window, 'selected_employee', None)
-                generate_pdf_for_form("annexure3_cwb", data, employee_data=emp_data, status=status)
-                
-                status_msg = "approved" if status == "approved" else "sent for doctor approval"
-                QMessageBox.information(self, "Success", f"Annexure 3 saved successfully ({status_msg})!\nPDF generated in employee folder.")
-            except Exception as pdf_error:
-                print(f"PDF generation failed: {pdf_error}")
-                import traceback
-                traceback.print_exc()
-                QMessageBox.information(self, "Success", "Annexure 3 saved successfully!\n(PDF generation failed - check logs)")
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to save form: {e}")
+        if result["success"]:
+            status_msg = "approved" if status == "approved" else "sent for doctor approval"
+            msg = f"Annexure 3 saved successfully ({status_msg})!"
+            if result["pdf_path"]:
+                msg += "\nPDF generated in employee folder."
+            else:
+                msg += "\n(PDF generation failed - check logs)"
+            QMessageBox.information(self, "Success", msg)
+        else:
+            QMessageBox.critical(self, "Error", f"Failed to save form: {result['error']}")
+

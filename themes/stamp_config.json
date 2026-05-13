@@ -1,0 +1,51 @@
+{
+  "_comment": "Position values are percentages of the stamp-footer container width/height. Rotation in degrees. Edit via StampEditorDialog or directly here, then call reload_stamp_config().",
+  "default": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  },
+  "workplace_drug_testing": {
+    "doctor_stamp":  { "x": 72, "y": 90, "scale": 0.9, "rotation": -5, "opacity": 0.8 },
+    "clinic_stamp":  { "x": 12, "y": 90, "scale": 0.9, "rotation": 0,  "opacity": 0.8 }
+  },
+  "certificate_of_fitness": {
+    "doctor_stamp":  { "x": 68, "y": 85, "scale": 1.1, "rotation": 0,  "opacity": 0.9 },
+    "clinic_stamp":  { "x": 10, "y": 85, "scale": 1.0, "rotation": 5,  "opacity": 0.85 }
+  },
+  "heights_questionnaire": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  },
+  "hot_cold_exposure": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  },
+  "confined_spaces_questionnaire": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  },
+  "musculoskeletal_questionnaire": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  },
+  "psychology_questionnaire": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  },
+  "cwb_medical_referral": {
+    "doctor_stamp":  { "x": 70, "y": 92, "scale": 0.85, "rotation": 0, "opacity": 0.8 },
+    "clinic_stamp":  { "x": 15, "y": 92, "scale": 0.85, "rotation": 0, "opacity": 0.8 }
+  },
+  "complete_wellbeing": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  },
+  "annexure3_cwb": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  },
+  "vitamin_b_consent": {
+    "doctor_stamp":  { "x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 },
+    "clinic_stamp":  { "x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85 }
+  }
+}

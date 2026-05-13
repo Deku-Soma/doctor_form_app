@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthCorp360 — Workplace Drug Testing</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="offline-banner" role="alert">⚠️ Offline</div>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">HealthCorp<span class="dot">360</span></a>
+    <div class="navbar-actions"><a href="/home.html" class="btn btn-ghost btn-sm">← Dashboard</a></div>
+  </nav>
+  <main class="container page-content">
+    <div class="page-header"><h1>Workplace Drug Testing Consent Form</h1></div>
+    <div id="form-alert"></div>
+    <form id="main-form" novalidate>
+      <!-- Employee -->
+      <div class="form-section">
+        <h3>Employee Details</h3>
+        <div class="form-grid">
+          <div class="field"><label for="full_name">Full Name</label><input id="full_name" name="full_name" type="text"></div>
+          <div class="field"><label for="id_number">ID Number</label><input id="id_number" name="id_number" type="text"></div>
+          <div class="field"><label for="employer">Employer</label><input id="employer" name="employer" type="text"></div>
+          <div class="field"><label for="job_title">Job Title</label><input id="job_title" name="job_title" type="text"></div>
+        </div>
+      </div>
+      <!-- Medication table -->
+      <div class="form-section">
+        <h3>Medication / Supplements taken in the past week</h3>
+        <div style="overflow-x:auto">
+          <table id="med-table" style="width:100%;border-collapse:collapse;font-size:var(--font-sm)">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border)">
+                <th style="text-align:left;padding:8px">Name of Medication</th>
+                <th style="text-align:left;padding:8px">Date Last Taken</th>
+                <th style="text-align:left;padding:8px">Reason for Treatment</th>
+              </tr>
+            </thead>
+            <tbody id="med-tbody">
+              <!-- rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm mt-1" id="add-med-row">+ Add row</button>
+      </div>
+      <!-- Test Results -->
+      <div class="form-section">
+        <h3>Test Results</h3>
+        <div class="form-grid">
+          <div class="field"><label for="cocaine">Cocaine — COC</label><select id="cocaine" name="cocaine"><option value="">—</option><option>Negative</option><option>Positive</option></select></div>
+          <div class="field"><label for="amphetamine">Amphetamine — AMP</label><select id="amphetamine" name="amphetamine"><option value="">—</option><option>Negative</option><option>Positive</option></select></div>
+          <div class="field"><label for="cannabis">Cannabis — THC</label><select id="cannabis" name="cannabis"><option value="">—</option><option>Negative</option><option>Positive</option></select></div>
+          <div class="field"><label for="opiates">Opiates / Morphine — MOP</label><select id="opiates" name="opiates"><option value="">—</option><option>Negative</option><option>Positive</option></select></div>
+          <div class="field"><label for="methamphetamine">Methamphetamine — MET</label><select id="methamphetamine" name="methamphetamine"><option value="">—</option><option>Negative</option><option>Positive</option></select></div>
+          <div class="field"><label for="benzodiazepine">Benzodiazepine — BZO</label><select id="benzodiazepine" name="benzodiazepine"><option value="">—</option><option>Negative</option><option>Positive</option></select></div>
+        </div>
+      </div>
+      <!-- Test Metadata -->
+      <div class="form-section">
+        <h3>Test Metadata</h3>
+        <div class="form-grid">
+          <div class="field"><label for="lot_number">Lot Number</label><input id="lot_number" name="lot_number" type="text"></div>
+          <div class="field"><label for="expiry_date">Expiry Date</label><input id="expiry_date" name="expiry_date" type="date"></div>
+          <div class="field"><label for="date_tested">Date Tested</label><input id="date_tested" name="date_tested" type="date"></div>
+        </div>
+      </div>
+      <!-- Signatures -->
+      <div class="form-section">
+        <h3>Employee Signature</h3>
+        <div class="signature-wrapper"><canvas id="emp-sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-emp-sig">Clear</button></div>
+      </div>
+      <div class="form-section">
+        <h3>OHN / OHP Signature</h3>
+        <div class="signature-wrapper"><canvas id="ohn-sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-ohn-sig">Clear</button></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="approve-btn"><span class="spinner"></span><span class="btn-label">✅ Approve</span></button>
+        <button type="button" class="btn btn-secondary" id="pending-btn">⏳ Needs Doctor Approval</button>
+      </div>
+    </form>
+    <div id="success-panel" class="hidden mt-2">
+      <div class="alert alert-success" id="success-msg"></div>
+      <a id="view-pdf-btn" href="#" target="_blank" class="btn btn-secondary btn-sm mt-1">📄 View PDF</a>
+    </div>
+  </main>
+  <script src="/static/app.js"></script><script src="/static/signature.js"></script>
+  <script>
+    const FORM_TYPE = 'workplace_drug_testing';
+    let empSig, ohnSig;
+
+    function addMedRow() {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="padding:4px"><input class="med-name" type="text" style="width:100%;min-height:36px;font-size:var(--font-sm);background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:4px 8px;color:var(--text-primary)"></td>
+        <td style="padding:4px"><input class="med-date" type="date" style="width:100%;min-height:36px;font-size:var(--font-sm);background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:4px 8px;color:var(--text-primary)"></td>
+        <td style="padding:4px"><input class="med-reason" type="text" style="width:100%;min-height:36px;font-size:var(--font-sm);background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:4px 8px;color:var(--text-primary)"></td>`;
+      document.getElementById('med-tbody').appendChild(tr);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!redirectIfNoSession()) return;
+      empSig = initSignaturePad('emp-sig-canvas');
+      ohnSig = initSignaturePad('ohn-sig-canvas');
+      document.getElementById('clear-emp-sig').onclick = () => empSig.clear();
+      document.getElementById('clear-ohn-sig').onclick = () => ohnSig.clear();
+      document.getElementById('add-med-row').onclick = addMedRow;
+      // Add 5 default rows
+      for(let i=0;i<5;i++) addMedRow();
+
+      const today = new Date().toISOString().slice(0,10);
+      document.getElementById('date_tested').value = today;
+      const expiry = new Date(); expiry.setFullYear(expiry.getFullYear()+1);
+      document.getElementById('expiry_date').value = expiry.toISOString().slice(0,10);
+
+      const co = getSelectedCompany(), emp = getSelectedEmployee();
+      if (co && emp) { try { const {autofill} = await apiFetch(`/forms/${FORM_TYPE}/autofill?company_id=${co.id}&employee_id=${emp.id}`); applyAutofill(document.getElementById('main-form'), autofill); } catch(e){} }
+      document.getElementById('pending-btn').onclick = () => submitForm('pending');
+    });
+
+    document.getElementById('main-form').onsubmit = e => { e.preventDefault(); submitForm('approved'); };
+
+    async function submitForm(status) {
+      const btn = document.getElementById(status==='approved'?'approve-btn':'pending-btn');
+      setButtonLoading(btn, true);
+
+      const meds = [];
+      document.querySelectorAll('#med-tbody tr').forEach(tr => {
+        const n = tr.querySelector('.med-name').value;
+        const d = tr.querySelector('.med-date').value;
+        const r = tr.querySelector('.med-reason').value;
+        if (n||d||r) meds.push({name:n, date_last_taken:d, reason:r});
+      });
+
+      const f = document.getElementById('main-form');
+      const fullName = f.elements['full_name'].value;
+      const data = {
+        employee: { full_name: fullName, id_number: f.elements['id_number'].value, employer: f.elements['employer'].value, job_title: f.elements['job_title'].value },
+        meds,
+        results: { cocaine:f.elements['cocaine'].value, amphetamine:f.elements['amphetamine'].value, cannabis:f.elements['cannabis'].value, opiates:f.elements['opiates'].value, methamphetamine:f.elements['methamphetamine'].value, benzodiazepine:f.elements['benzodiazepine'].value },
+        meta: { lot_number:f.elements['lot_number'].value, expiry_date:f.elements['expiry_date'].value, date_tested:f.elements['date_tested'].value },
+        sign: { employee_signature_text: fullName, employee_signature_img: empSig?empSig.toBase64():'', ohn_signature_text:'', ohn_signature_img: ohnSig?ohnSig.toBase64():'' },
+        name: fullName.split(' ')[0]||'', surname: fullName.split(' ').slice(1).join(' ')||'', id_number: f.elements['id_number'].value
+      };
+
+      const co = getSelectedCompany()||{}, emp = getSelectedEmployee()||{};
+      try {
+        const r = await apiFetch(`/forms/${FORM_TYPE}/submit`,{method:'POST',body:JSON.stringify({employee_id:emp.id||'',company_id:co.id||'',data,status,employee_data:emp,user_id:(getSession()||{}).id||null})});
+        document.getElementById('success-msg').textContent = `✅ Saved (${status})! ID: ${r.submission_id||'—'}`;
+        if(r.pdf_path) document.getElementById('view-pdf-btn').href=`/documents/pdf?path=${encodeURIComponent(r.pdf_path)}`;
+        document.getElementById('success-panel').classList.remove('hidden');
+      } catch(err) { showAlert(document.getElementById('form-alert'),'error',err.message); }
+      finally { setButtonLoading(btn,false); }
+    }
+  </script>
+</body>
+</html>

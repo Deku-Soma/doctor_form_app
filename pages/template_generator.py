@@ -2,8 +2,49 @@
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
 import os
+import json
 import base64
 import tempfile
+from Utility.app_context import get_resource_path
+
+# ---------------------------------------------------------------------------
+# Stamp config — loaded once at module import; reloadable without restart
+# ---------------------------------------------------------------------------
+
+_STAMP_CONFIG_DEFAULTS = {
+    "doctor_stamp": {"x": 70, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85},
+    "clinic_stamp":  {"x": 15, "y": 88, "scale": 1.0, "rotation": 0, "opacity": 0.85},
+}
+
+def _load_stamp_config() -> dict:
+    """Load themes/stamp_config.json. Returns {} on any error (defaults apply)."""
+    config_path = get_resource_path(os.path.join("themes", "stamp_config.json"))
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Warning: could not load stamp_config.json ({e}), using defaults")
+        return {}
+
+_STAMP_CONFIG = _load_stamp_config()
+
+
+def get_stamp_config(form_type: str) -> dict:
+    """
+    Returns the stamp config dict for *form_type*.
+    Falls back to 'default' block, then to hardcoded defaults.
+    Each returned dict has two keys: 'doctor_stamp' and 'clinic_stamp'.
+    """
+    return _STAMP_CONFIG.get(
+        form_type,
+        _STAMP_CONFIG.get("default", _STAMP_CONFIG_DEFAULTS)
+    )
+
+
+def reload_stamp_config():
+    """Reload stamp_config.json from disk — call after saving from StampEditorDialog."""
+    global _STAMP_CONFIG
+    _STAMP_CONFIG = _load_stamp_config()
 
 # Template mapping for all form types
 TEMPLATE_MAP = {
@@ -38,7 +79,6 @@ def save_signature_temp(base64_data):
 
 from Utility.file_manager import file_manager
 from Utility.local_db import local_db
-from Utility.app_context import get_resource_path
 from datetime import datetime
 
 def generate_pdf_for_form(form_type, data, output_path=None, employee_data=None, status="approved"):
@@ -156,14 +196,19 @@ def generate_pdf_for_form(form_type, data, output_path=None, employee_data=None,
             except Exception as e:
                 print(f"Warning: Could not load stamp 2: {e}")
         
-        # Merge signature paths, logo, and stamps into data
-        # Also add employee data if present
+        # Load stamp positioning config for this form type
+        stamp_cfg = get_stamp_config(form_type)
+
+        # Merge signature paths, logo, stamps, and positioning config into data
         render_data = {
-            **data, 
-            **signature_paths, 
-            'logo_data_uri': logo_data_uri,
+            **data,
+            **signature_paths,
+            'logo_data_uri':   logo_data_uri,
             'stamp1_data_uri': stamp1_data_uri,
-            'stamp2_data_uri': stamp2_data_uri
+            'stamp2_data_uri': stamp2_data_uri,
+            # Dynamic positioning variables consumed by all 11 Jinja2 templates
+            'doctor_stamp': stamp_cfg.get('doctor_stamp', _STAMP_CONFIG_DEFAULTS['doctor_stamp']),
+            'clinic_stamp':  stamp_cfg.get('clinic_stamp',  _STAMP_CONFIG_DEFAULTS['clinic_stamp']),
         }
         
         if employee_data:

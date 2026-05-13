@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="HealthCorp360 — Select a form to complete for the current employee">
+  <title>HealthCorp360 — Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!-- Offline indicator -->
+  <div id="offline-banner" role="alert">
+    ⚠️ You are offline. Data will sync when connection is restored.
+  </div>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="main-nav">
+    <a href="/home.html" class="navbar-brand">
+      HealthCorp<span class="dot">360</span>
+    </a>
+    <div class="navbar-actions">
+      <span id="nav-user" class="text-muted" style="font-size:0.85rem"></span>
+      <button class="btn btn-ghost btn-sm" id="logout-btn">Sign out</button>
+    </div>
+  </nav>
+
+  <!-- Context: who is being assessed -->
+  <div class="context-bar" id="context-bar">
+    <span class="text-muted">Company:</span>
+    <span id="ctx-company" class="chip chip-empty">None selected</span>
+    <span class="text-muted" style="margin-left:8px">Employee:</span>
+    <span id="ctx-employee" class="chip chip-empty">None selected</span>
+    <button class="btn btn-ghost btn-sm" id="change-context-btn" style="margin-left:auto">
+      Change selection
+    </button>
+  </div>
+
+  <!-- Main content -->
+  <main class="container page-content" id="main-content">
+
+    <!-- ── Context selector (shown when no company/employee selected) ── -->
+    <section id="selector-panel" class="hidden">
+      <div class="page-header">
+        <h1>Select Company &amp; Employee</h1>
+        <p>Choose who this assessment is for before opening a form.</p>
+      </div>
+
+      <div class="form-grid" style="max-width:680px">
+        <!-- Company picker -->
+        <div class="card">
+          <h3 style="margin-bottom:var(--gap)">Company</h3>
+          <div class="field">
+            <label for="company-select">Select company</label>
+            <select id="company-select">
+              <option value="">— loading companies —</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Employee picker -->
+        <div class="card">
+          <h3 style="margin-bottom:var(--gap)">Employee</h3>
+          <div class="field">
+            <label for="employee-select">Select employee</label>
+            <select id="employee-select" disabled>
+              <option value="">— select a company first —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary mt-2" id="confirm-context-btn" disabled>
+        Continue to forms
+      </button>
+
+      <div id="selector-error" class="hidden mt-2"></div>
+    </section>
+
+    <!-- ── Dashboard: form cards (shown when context is set) ── -->
+    <section id="dashboard-panel" class="hidden">
+      <div class="page-header">
+        <h1>Assessment Forms</h1>
+        <p>Select the form to complete for the current employee.</p>
+      </div>
+
+      <div class="card-grid" id="forms-grid">
+        <!-- Injected by JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    'use strict';
+
+    /* ── Form catalogue ──────────────────────────────────────────────────── */
+    const FORMS = [
+      {
+        type:  'annexure3_cwb',
+        title: 'Annexure 3 — CWB',
+        icon:  '📋',
+        desc:  'Chronic & wellness baseline assessment annexure.',
+        href:  '/forms/annexure3_cwb.html',
+      },
+      {
+        type:  'certificate_of_fitness',
+        title: 'Certificate of Fitness',
+        icon:  '✅',
+        desc:  'Issue an official certificate of medical fitness.',
+        href:  '/forms/certificate_of_fitness.html',
+      },
+      {
+        type:  'complete_wellbeing',
+        title: 'Complete Wellbeing',
+        icon:  '💚',
+        desc:  'Full chronic wellness screening questionnaire.',
+        href:  '/forms/complete_wellbeing.html',
+      },
+      {
+        type:  'workplace_drug_testing',
+        title: 'Workplace Drug Testing',
+        icon:  '🔬',
+        desc:  'Drug and alcohol screening record.',
+        href:  '/forms/workplace_drug_testing.html',
+      },
+      {
+        type:  'cwb_medical_referral',
+        title: 'CWB Medical Referral',
+        icon:  '🏥',
+        desc:  'Refer an employee for further medical assessment.',
+        href:  '/forms/cwb_medical_referral.html',
+      },
+      {
+        type:  'heights_questionnaire',
+        title: 'Heights Questionnaire',
+        icon:  '🦺',
+        desc:  'Pre-screening for work-at-height tasks.',
+        href:  '/forms/heights_questionnaire.html',
+      },
+      {
+        type:  'hot_cold_exposure',
+        title: 'Hot / Cold Exposure',
+        icon:  '🌡️',
+        desc:  'Thermal environment medical screening.',
+        href:  '/forms/hot_cold_exposure.html',
+      },
+      {
+        type:  'confined_spaces_questionnaire',
+        title: 'Confined Spaces',
+        icon:  '🚪',
+        desc:  'Pre-entry questionnaire for confined space work.',
+        href:  '/forms/confined_spaces_questionnaire.html',
+      },
+      {
+        type:  'musculoskeletal_questionnaire',
+        title: 'Musculoskeletal',
+        icon:  '🦴',
+        desc:  'Body discomfort and symptom grid assessment.',
+        href:  '/forms/musculoskeletal_questionnaire.html',
+      },
+      {
+        type:  'psychology_questionnaire',
+        title: 'Psychology Screening',
+        icon:  '🧠',
+        desc:  'Wellbeing and psychological stress questionnaire.',
+        href:  '/forms/psychology_questionnaire.html',
+      },
+      {
+        type:  'vitamin_b_consent',
+        title: 'Vitamin B Consent',
+        icon:  '💉',
+        desc:  'Informed consent for Vitamin B injections.',
+        href:  '/forms/vitamin_b_consent.html',
+      },
+    ];
+
+    /* ── Init ────────────────────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!redirectIfNoSession()) return;
+
+      // Show logged-in user
+      const session = getSession();
+      const navUser = document.getElementById('nav-user');
+      if (navUser && session) {
+        navUser.textContent = session.user_email || session.email || 'Practitioner';
+      }
+
+      // Logout
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        try { await apiFetch('/auth/logout', { method: 'POST' }); } catch {}
+        clearSession();
+        window.location.href = '/index.html';
+      });
+
+      // Change context
+      document.getElementById('change-context-btn').addEventListener('click', showSelectorPanel);
+
+      // Restore context from session
+      const company  = getSelectedCompany();
+      const employee = getSelectedEmployee();
+
+      if (company && employee) {
+        showDashboard(company, employee);
+      } else {
+        showSelectorPanel();
+      }
+    });
+
+    /* ── Context bar ─────────────────────────────────────────────────────── */
+    function updateContextBar(company, employee) {
+      const cc = document.getElementById('ctx-company');
+      const ce = document.getElementById('ctx-employee');
+      if (company) {
+        cc.textContent  = company.name;
+        cc.className    = 'chip';
+      } else {
+        cc.textContent  = 'None selected';
+        cc.className    = 'chip chip-empty';
+      }
+      if (employee) {
+        const name = [employee.first_name, employee.last_name].filter(Boolean).join(' ');
+        ce.textContent  = name || employee.id;
+        ce.className    = 'chip';
+      } else {
+        ce.textContent  = 'None selected';
+        ce.className    = 'chip chip-empty';
+      }
+    }
+
+    /* ── Selector panel ──────────────────────────────────────────────────── */
+    async function showSelectorPanel() {
+      document.getElementById('selector-panel').classList.remove('hidden');
+      document.getElementById('dashboard-panel').classList.add('hidden');
+
+      // Load companies
+      const companySelect   = document.getElementById('company-select');
+      const employeeSelect  = document.getElementById('employee-select');
+      const confirmBtn      = document.getElementById('confirm-context-btn');
+      const errBox          = document.getElementById('selector-error');
+
+      companySelect.innerHTML  = '<option value="">— loading —</option>';
+      employeeSelect.innerHTML = '<option value="">— select a company first —</option>';
+      employeeSelect.disabled  = true;
+      confirmBtn.disabled      = true;
+
+      let companies = [];
+      try {
+        const data = await apiFetch('/companies');
+        companies  = data.companies || [];
+      } catch (err) {
+        errBox.textContent = 'Could not load companies: ' + err.message;
+        errBox.className   = 'alert alert-error';
+        return;
+      }
+
+      companySelect.innerHTML = '<option value="">— select company —</option>';
+      companies.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        opt.dataset.json = JSON.stringify(c);
+        companySelect.appendChild(opt);
+      });
+
+      // Restore previous selection if any
+      const prevCompany = getSelectedCompany();
+      if (prevCompany) companySelect.value = prevCompany.id;
+
+      companySelect.addEventListener('change', async () => {
+        const selOpt = companySelect.options[companySelect.selectedIndex];
+        employeeSelect.innerHTML = '<option value="">— loading employees —</option>';
+        employeeSelect.disabled  = true;
+        confirmBtn.disabled      = true;
+
+        if (!companySelect.value) return;
+
+        try {
+          const data = await apiFetch(`/employees?company_id=${companySelect.value}`);
+          const employees = data.employees || [];
+          employeeSelect.innerHTML = '<option value="">— select employee —</option>';
+          employees.forEach(emp => {
+            const opt = document.createElement('option');
+            opt.value = emp.id;
+            const name = [emp.first_name, emp.last_name].filter(Boolean).join(' ');
+            opt.textContent = name || emp.id_number || emp.id;
+            opt.dataset.json = JSON.stringify(emp);
+            employeeSelect.appendChild(opt);
+          });
+          employeeSelect.disabled = false;
+
+          // Restore previous employee if same company
+          const prevEmployee = getSelectedEmployee();
+          if (prevEmployee && prevEmployee.company_id === companySelect.value) {
+            employeeSelect.value = prevEmployee.id;
+          }
+        } catch (err) {
+          employeeSelect.innerHTML = `<option value="">Error: ${err.message}</option>`;
+        }
+      });
+
+      employeeSelect.addEventListener('change', () => {
+        confirmBtn.disabled = !companySelect.value || !employeeSelect.value;
+      });
+
+      // Trigger company change if pre-selected
+      if (companySelect.value) companySelect.dispatchEvent(new Event('change'));
+
+      confirmBtn.addEventListener('click', () => {
+        const companyOpt  = companySelect.options[companySelect.selectedIndex];
+        const employeeOpt = employeeSelect.options[employeeSelect.selectedIndex];
+        if (!companyOpt.value || !employeeOpt.value) return;
+
+        const company  = JSON.parse(companyOpt.dataset.json);
+        const employee = JSON.parse(employeeOpt.dataset.json);
+        setSelectedCompany(company);
+        setSelectedEmployee(employee);
+        showDashboard(company, employee);
+      }, { once: true }); // once so re-opening doesn't stack listeners
+    }
+
+    /* ── Dashboard panel ─────────────────────────────────────────────────── */
+    function showDashboard(company, employee) {
+      document.getElementById('selector-panel').classList.add('hidden');
+      document.getElementById('dashboard-panel').classList.remove('hidden');
+      updateContextBar(company, employee);
+
+      const grid = document.getElementById('forms-grid');
+      grid.innerHTML = '';
+
+      FORMS.forEach((f, idx) => {
+        const a = document.createElement('a');
+        a.href      = f.href;
+        a.className = 'card card-clickable form-card fade-in';
+        a.style.animationDelay = `${idx * 40}ms`;
+        a.id        = `form-card-${f.type}`;
+        a.innerHTML = `
+          <div class="form-card-icon">${f.icon}</div>
+          <div class="form-card-title">${f.title}</div>
+          <div class="form-card-desc">${f.desc}</div>
+        `;
+        grid.appendChild(a);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -144,19 +144,33 @@
         </tr>
     </table>
 
-    <!-- Stamps Footer -->
-    <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;">
+    <!-- Stamps Footer — positions driven by themes/stamp_config.json via template_generator.py -->
+    <div style="position: relative; width: 100%; height: 180px; margin-top: 40px;">
         {% if stamp1_data_uri %}
-        <div style="text-align: center;">
-            <img src="{{ stamp1_data_uri }}" alt="Dr. Stamp" style="max-height: 144px; max-width: 240px;">
-        </div>
+        <img src="{{ stamp1_data_uri }}" alt="Dr. Stamp"
+             style="
+                 position: absolute;
+                 left: {{ doctor_stamp.x }}%;
+                 top:  {{ doctor_stamp.y }}%;
+                 transform: scale({{ doctor_stamp.scale }}) rotate({{ doctor_stamp.rotation }}deg);
+                 transform-origin: top left;
+                 opacity: {{ doctor_stamp.opacity }};
+                 max-height: 144px; max-width: 240px;
+             ">
         {% endif %}
         {% if stamp2_data_uri %}
-        <div style="text-align: center;">
-            <img src="{{ stamp2_data_uri }}" alt="Company Stamp" style="max-height: 144px; max-width: 240px;">
-        </div>
+        <img src="{{ stamp2_data_uri }}" alt="Company Stamp"
+             style="
+                 position: absolute;
+                 left: {{ clinic_stamp.x }}%;
+                 top:  {{ clinic_stamp.y }}%;
+                 transform: scale({{ clinic_stamp.scale }}) rotate({{ clinic_stamp.rotation }}deg);
+                 transform-origin: top left;
+                 opacity: {{ clinic_stamp.opacity }};
+                 max-height: 144px; max-width: 240px;
+             ">
         {% endif %}
     </div>
 </body>
 
-</html>
+</html>

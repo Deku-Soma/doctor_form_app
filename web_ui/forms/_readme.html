@@ -1,0 +1,10 @@
+<!--
+  web_ui/forms/_form_base.html — NOT a standalone page.
+  This comment documents the shared structure used by all 11 form pages.
+
+  Every form page:
+  1. Includes /static/styles.css and /static/app.js
+  2. On DOMContentLoaded: calls redirectIfNoSession(), then loads autofill
+  3. On submit: POSTs to /forms/{form_type}/submit
+  4. Shows inline success (with PDF path + view button) or error — never alert()
+-->

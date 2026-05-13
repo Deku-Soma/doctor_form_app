@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="HealthCorp360 — Occupational health practitioner login">
+  <title>HealthCorp360 — Login</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    /* Animated background dots */
+    .bg-grid {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(circle, rgba(29,158,117,0.06) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+    .login-page { position: relative; z-index: 1; }
+
+    /* Pulse on brand logo */
+    @keyframes pulse-brand {
+      0%, 100% { text-shadow: 0 0 0 rgba(29,158,117,0); }
+      50%       { text-shadow: 0 0 24px rgba(29,158,117,0.4); }
+    }
+    .brand-name { animation: pulse-brand 3s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <div id="offline-banner" role="alert">
+    ⚠️ You are offline. Using cached credentials.
+  </div>
+
+  <main class="login-page" id="login-root">
+    <div class="login-box fade-in">
+      <div class="login-logo">
+        <div class="brand-name">HealthCorp<span style="color:var(--text-secondary)">360</span></div>
+        <div class="brand-sub">Occupational Health Management</div>
+      </div>
+
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="email">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="practitioner@clinic.co.za"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
+          >
+        </div>
+
+        <div id="login-error" class="hidden" role="alert"></div>
+
+        <button type="submit" class="btn btn-primary btn-full mt-2" id="login-btn">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-label">Sign in</span>
+        </button>
+      </form>
+
+      <p class="text-muted mt-1" style="text-align:center;font-size:0.78rem;">
+        Access restricted to registered practitioners.<br>
+        Contact your administrator to create an account.
+      </p>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    'use strict';
+
+    // If already logged in, go straight to home
+    document.addEventListener('DOMContentLoaded', () => {
+      if (getSession()) {
+        window.location.href = '/home.html';
+        return;
+      }
+    });
+
+    const form    = document.getElementById('login-form');
+    const btn     = document.getElementById('login-btn');
+    const errBox  = document.getElementById('login-error');
+
+    function showError(msg) {
+      errBox.textContent = msg;
+      errBox.className   = 'alert alert-error fade-in';
+    }
+    function clearError() {
+      errBox.className = 'hidden';
+      errBox.textContent = '';
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      clearError();
+
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        showError('Please enter your email and password.');
+        return;
+      }
+
+      setButtonLoading(btn, true);
+
+      try {
+        const data = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        });
+
+        // Persist session
+        const user = data.user || {};
+        user._mode = data.mode; // 'online' | 'offline'
+        saveSession(user);
+
+        // Navigate to dashboard
+        window.location.href = '/home.html';
+
+      } catch (err) {
+        showError(err.message || 'Login failed. Check your credentials and try again.');
+      } finally {
+        setButtonLoading(btn, false);
+      }
+    });
+  </script>
+</body>
+</html>

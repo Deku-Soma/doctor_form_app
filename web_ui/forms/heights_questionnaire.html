@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthCorp360 — Heights Questionnaire</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .q-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); gap:12px; font-size:var(--font-sm); }
+    .q-row:last-child { border-bottom:none; }
+    .q-text { flex:1; }
+    .q-radios { display:flex; gap:12px; flex-shrink:0; }
+    .q-radios label { display:flex; align-items:center; gap:4px; cursor:pointer; font-size:var(--font-sm); font-weight:400; min-height:unset; margin:0; }
+    .q-radios input { width:16px; min-height:unset; accent-color:var(--brand); }
+  </style>
+</head>
+<body>
+  <div id="offline-banner" role="alert">⚠️ Offline</div>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">HealthCorp<span class="dot">360</span></a>
+    <div class="navbar-actions"><a href="/home.html" class="btn btn-ghost btn-sm">← Dashboard</a></div>
+  </nav>
+  <main class="container page-content">
+    <div class="page-header"><h1>Working at Heights — General Health Questionnaire</h1></div>
+    <div id="form-alert"></div>
+    <form id="main-form" novalidate>
+      <div class="form-section">
+        <h3>Employee Details</h3>
+        <div class="field"><label for="full_name_surname">Full Name &amp; Surname</label><input id="full_name_surname" name="full_name_surname" type="text"></div>
+      </div>
+      <div class="form-section">
+        <h3>Do you currently have or previously had:</h3>
+        <div id="questions-container"></div>
+      </div>
+      <div class="form-section">
+        <h3>Employee Declaration</h3>
+        <div class="field"><label for="employee_signature_date">Date</label><input id="employee_signature_date" name="employee_signature_date" type="date"></div>
+        <p class="text-muted" style="margin-bottom:8px">Employee Signature</p>
+        <div class="signature-wrapper"><canvas id="emp-sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-emp">Clear</button></div>
+      </div>
+      <div class="form-section">
+        <h3>Examiner Declaration</h3>
+        <div class="field"><label for="examiner_signature_date">Date</label><input id="examiner_signature_date" name="examiner_signature_date" type="date"></div>
+        <p class="text-muted" style="margin-bottom:8px">Examiner Signature</p>
+        <div class="signature-wrapper"><canvas id="exam-sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-exam">Clear</button></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="approve-btn"><span class="spinner"></span><span class="btn-label">✅ Approve</span></button>
+        <button type="button" class="btn btn-secondary" id="pending-btn">⏳ Needs Doctor Approval</button>
+      </div>
+    </form>
+    <div id="success-panel" class="hidden mt-2">
+      <div class="alert alert-success" id="success-msg"></div>
+      <a id="view-pdf-btn" href="#" target="_blank" class="btn btn-secondary btn-sm mt-1">📄 View PDF</a>
+    </div>
+  </main>
+  <script src="/static/app.js"></script><script src="/static/signature.js"></script>
+  <script>
+    const FORM_TYPE = 'heights_questionnaire';
+    const QUESTIONS = [
+      ['q01_neuro_epilepsy_convulsions','1. Diagnosed with neurological conditions, epilepsy, convulsions'],
+      ['q02_frequent_headaches','2. Frequent headaches'],
+      ['q03_head_injury','3. Head injury'],
+      ['q04_meds_depression_anxiety_mental','4. On medication for depression, anxiety, mental conditions'],
+      ['q05_previous_suicide_attempts','5. Previous suicide attempts'],
+      ['q06_sleep_disorders','6. Sleep disorders'],
+      ['q07_depression','7. Depression'],
+      ['q08_dizziness_fainting','8. Dizziness or fainting spells'],
+      ['q09_epilepsy','9. Epilepsy'],
+      ['q10_hearing_problems','10. Hearing problems'],
+      ['q11_ear_ringing_discharges_infections','11. Problems with ears/ringing/discharges/infections'],
+      ['q12_vision_eye_glasses','12. Vision/eye problems/need glasses'],
+      ['q13_heart_problems','13. Heart problems'],
+      ['q14_high_blood_pressure','14. High blood pressure'],
+      ['q15_lung_problems_asthma','15. Lung problems/asthma'],
+      ['q16_diabetes_blood_sugar','16. Diabetes'],
+      ['q17_taking_any_medication','17. Taking any medication'],
+      ['q18_advised_not_exercise','18. Advised by doctor not to exercise'],
+      ['q19_kidney_problems','19. Kidney problems'],
+      ['q20_back_muscle_joint_pain','20. Back or muscle problems/joint pains'],
+      ['q21_pins_needles_numbness','21. Pins and needles or numbness'],
+      ['q22_fear_heights_small_spaces','22. Fear of heights or small spaces'],
+      ['q23_meds_dizzy_drowsy','23. Medication that makes you dizzy/drowsy'],
+    ];
+
+    let empSig, examSig;
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!redirectIfNoSession()) return;
+      empSig  = initSignaturePad('emp-sig-canvas');
+      examSig = initSignaturePad('exam-sig-canvas');
+      document.getElementById('clear-emp').onclick  = () => empSig.clear();
+      document.getElementById('clear-exam').onclick = () => examSig.clear();
+      const today = new Date().toISOString().slice(0,10);
+      document.getElementById('employee_signature_date').value = today;
+      document.getElementById('examiner_signature_date').value = today;
+
+      // Build questions
+      const container = document.getElementById('questions-container');
+      QUESTIONS.forEach(([key, text]) => {
+        const row = document.createElement('div');
+        row.className = 'q-row';
+        row.innerHTML = `<span class="q-text">${text}</span>
+          <span class="q-radios">
+            <label><input type="radio" name="${key}" value="Y"> Yes</label>
+            <label><input type="radio" name="${key}" value="N"> No</label>
+          </span>`;
+        container.appendChild(row);
+      });
+
+      const co = getSelectedCompany(), emp = getSelectedEmployee();
+      if (co && emp) { try { const {autofill} = await apiFetch(`/forms/${FORM_TYPE}/autofill?company_id=${co.id}&employee_id=${emp.id}`); applyAutofill(document.getElementById('main-form'), autofill); } catch(e){} }
+      document.getElementById('pending-btn').onclick = () => submitForm('pending');
+    });
+    document.getElementById('main-form').onsubmit = e => { e.preventDefault(); submitForm('approved'); };
+
+    async function submitForm(status) {
+      const btn = document.getElementById(status==='approved'?'approve-btn':'pending-btn');
+      setButtonLoading(btn, true);
+      const data = { full_name_surname: document.getElementById('main-form').elements['full_name_surname'].value };
+      QUESTIONS.forEach(([key]) => {
+        const sel = document.querySelector(`input[name="${key}"]:checked`);
+        data[key] = sel ? sel.value : '';
+      });
+      data.employee_signature_date = document.getElementById('employee_signature_date').value;
+      data.examiner_signature_date = document.getElementById('examiner_signature_date').value;
+      data.employee_signature_data = empSig ? empSig.toBase64() : '';
+      data.examiner_signature_data = examSig ? examSig.toBase64() : '';
+      const fn = data.full_name_surname.split(' ');
+      data.name = fn[0]||''; data.surname = fn.slice(1).join(' ')||'';
+
+      const co = getSelectedCompany()||{}, emp = getSelectedEmployee()||{};
+      try {
+        const r = await apiFetch(`/forms/${FORM_TYPE}/submit`,{method:'POST',body:JSON.stringify({employee_id:emp.id||'',company_id:co.id||'',data,status,employee_data:emp,user_id:(getSession()||{}).id||null})});
+        document.getElementById('success-msg').textContent = `✅ Saved (${status})! ID: ${r.submission_id||'—'}`;
+        if(r.pdf_path) document.getElementById('view-pdf-btn').href=`/documents/pdf?path=${encodeURIComponent(r.pdf_path)}`;
+        document.getElementById('success-panel').classList.remove('hidden');
+      } catch(err) { showAlert(document.getElementById('form-alert'),'error',err.message); }
+      finally { setButtonLoading(btn,false); }
+    }
+  </script>
+</body>
+</html>

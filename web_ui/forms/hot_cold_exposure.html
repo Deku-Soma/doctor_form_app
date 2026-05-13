@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthCorp360 — Hot/Cold Exposure</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="offline-banner" role="alert">⚠️ Offline</div>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">HealthCorp<span class="dot">360</span></a>
+    <div class="navbar-actions"><a href="/home.html" class="btn btn-ghost btn-sm">← Dashboard</a></div>
+  </nav>
+  <main class="container page-content">
+    <div class="page-header"><h1>Hot/Cold Exposure Medical Surveillance Survey</h1></div>
+    <div id="form-alert"></div>
+    <form id="main-form" novalidate>
+      <!-- Part A -->
+      <div class="form-section">
+        <h3>Part A — Employee Information</h3>
+        <div class="form-grid">
+          <div class="field"><label for="first_name">First Name</label><input id="first_name" name="first_name" type="text"></div>
+          <div class="field"><label for="last_name">Last Name</label><input id="last_name" name="last_name" type="text"></div>
+          <div class="field"><label for="id_number">ID Number</label><input id="id_number" name="id_number" type="text"></div>
+          <div class="field"><label for="telephone">Telephone</label><input id="telephone" name="telephone" type="tel"></div>
+          <div class="field"><label for="date">Date</label><input id="date" name="date" type="date"></div>
+          <div class="field"><label for="job_title">Job Title</label><input id="job_title" name="job_title" type="text"></div>
+        </div>
+      </div>
+      <!-- Part B -->
+      <div class="form-section">
+        <h3>Part B — Conditions Pertaining to Heat or Cold Stress</h3>
+        <div class="check-group" style="flex-direction:column;align-items:flex-start;">
+          <label><input type="checkbox" name="humidity_over_30c" value="true"> Indoor/Outdoor Humidity &gt; 30°C</label>
+          <label><input type="checkbox" name="hot_indoor_over_30min" value="true"> Continuous work &gt;30 min in hot indoor areas</label>
+          <label><input type="checkbox" name="cold_below_minus15_or_windchill_minus25" value="true"> Work &gt;30 min in temp &lt;-15°C or windchill &lt;-25°C</label>
+        </div>
+        <div class="field mt-2"><label for="partb_other_text">Other</label><input id="partb_other_text" name="partb_other_text" type="text"></div>
+      </div>
+      <!-- Part C -->
+      <div class="form-section">
+        <h3>Part C — Worker Health Conditions</h3>
+        <div class="field">
+          <label>Hot Environment — do you have any listed conditions?</label>
+          <p class="text-muted" style="font-size:0.8rem;margin-bottom:8px">Shortness of breath, Chronic Bronchitis, Emphysema, Lung Disease, Heart Problems, Cardiovascular disease, Diabetes, Fainting, Seizures, Asthma, Pacemaker, Skin conditions, Anhidrosis…</p>
+          <div class="radio-group">
+            <label><input type="radio" name="hot_any_conditions" value="Yes"> Yes</label>
+            <label><input type="radio" name="hot_any_conditions" value="No"> No</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Cold Environment — do you have any listed conditions?</label>
+          <p class="text-muted" style="font-size:0.8rem;margin-bottom:8px">Shortness of breath, Lung Disease, Heart Problems, Hypertension, Diabetes, Asthma, COPD, Cystic Fibrosis, Raynaud's Disease, Rheumatic Disease…</p>
+          <div class="radio-group">
+            <label><input type="radio" name="cold_any_conditions" value="Yes"> Yes</label>
+            <label><input type="radio" name="cold_any_conditions" value="No"> No</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Other conditions affecting ability to work in hot/cold environments?</label>
+          <div class="radio-group">
+            <label><input type="radio" name="other_conditions_yes" value="Yes"> Yes</label>
+            <label><input type="radio" name="other_conditions_yes" value="No"> No</label>
+          </div>
+        </div>
+        <div class="field"><label for="other_conditions_text">Specify other conditions</label><input id="other_conditions_text" name="other_conditions_text" type="text"></div>
+      </div>
+      <!-- Signature -->
+      <div class="form-section">
+        <h3>Employee Signature</h3>
+        <div class="field"><label for="signature_date">Date</label><input id="signature_date" name="signature_date" type="date"></div>
+        <div class="signature-wrapper"><canvas id="sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-sig">Clear</button></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="approve-btn"><span class="spinner"></span><span class="btn-label">✅ Approve</span></button>
+        <button type="button" class="btn btn-secondary" id="pending-btn">⏳ Needs Doctor Approval</button>
+      </div>
+    </form>
+    <div id="success-panel" class="hidden mt-2">
+      <div class="alert alert-success" id="success-msg"></div>
+      <a id="view-pdf-btn" href="#" target="_blank" class="btn btn-secondary btn-sm mt-1">📄 View PDF</a>
+    </div>
+  </main>
+  <script src="/static/app.js"></script><script src="/static/signature.js"></script>
+  <script>
+    const FORM_TYPE = 'hot_cold_exposure'; let sigPad;
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!redirectIfNoSession()) return;
+      sigPad = initSignaturePad('sig-canvas');
+      document.getElementById('clear-sig').onclick = () => sigPad.clear();
+      const today = new Date().toISOString().slice(0,10);
+      document.getElementById('date').value = today;
+      document.getElementById('signature_date').value = today;
+      const co = getSelectedCompany(), emp = getSelectedEmployee();
+      if (co && emp) { try { const {autofill} = await apiFetch(`/forms/${FORM_TYPE}/autofill?company_id=${co.id}&employee_id=${emp.id}`); applyAutofill(document.getElementById('main-form'), autofill); } catch(e){} }
+      document.getElementById('pending-btn').onclick = () => submitForm('pending');
+    });
+    document.getElementById('main-form').onsubmit = e => { e.preventDefault(); submitForm('approved'); };
+    async function submitForm(status) {
+      const btn = document.getElementById(status==='approved'?'approve-btn':'pending-btn');
+      setButtonLoading(btn, true);
+      const f = document.getElementById('main-form');
+      const partBData = {};
+      ['humidity_over_30c','hot_indoor_over_30min','cold_below_minus15_or_windchill_minus25'].forEach(k => { partBData[k] = f.elements[k]?.checked||false; });
+      partBData.other_text = f.elements['partb_other_text']?.value||'';
+
+      const getRadio = name => { const el = f.querySelector(`input[name="${name}"]:checked`); return el?el.value:''; };
+      const partCData = { hot_any_conditions: getRadio('hot_any_conditions'), cold_any_conditions: getRadio('cold_any_conditions'), other_conditions_yes: getRadio('other_conditions_yes'), other_conditions_text: f.elements['other_conditions_text']?.value||'' };
+
+      const data = {
+        employee: { first_name: f.elements['first_name'].value, last_name: f.elements['last_name'].value, id_number: f.elements['id_number'].value, telephone: f.elements['telephone'].value, date: f.elements['date'].value, job_title: f.elements['job_title'].value },
+        partB: partBData, partC: partCData,
+        signature_date: f.elements['signature_date'].value,
+        employee_signature: sigPad ? sigPad.toBase64() : '',
+        name: f.elements['first_name'].value, surname: f.elements['last_name'].value, id_number: f.elements['id_number'].value,
+      };
+      const co = getSelectedCompany()||{}, emp = getSelectedEmployee()||{};
+      try {
+        const r = await apiFetch(`/forms/${FORM_TYPE}/submit`,{method:'POST',body:JSON.stringify({employee_id:emp.id||'',company_id:co.id||'',data,status,employee_data:emp,user_id:(getSession()||{}).id||null})});
+        document.getElementById('success-msg').textContent = `✅ Saved (${status})! ID: ${r.submission_id||'—'}`;
+        if(r.pdf_path) document.getElementById('view-pdf-btn').href=`/documents/pdf?path=${encodeURIComponent(r.pdf_path)}`;
+        document.getElementById('success-panel').classList.remove('hidden');
+      } catch(err) { showAlert(document.getElementById('form-alert'),'error',err.message); }
+      finally { setButtonLoading(btn,false); }
+    }
+  </script>
+</body>
+</html>

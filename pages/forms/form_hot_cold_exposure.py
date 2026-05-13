@@ -32,6 +32,28 @@ def _capture_company_template_if_first(company_id, form_type, data):
 
 
 
+def process_submission(employee_id: str, company_id: str, data: dict, status: str = "approved", employee_data: dict = None, user_id: str = None) -> dict:
+    """
+    UI-agnostic form processing for hot_cold_exposure.
+    Returns {'success': bool, 'pdf_path': str | None, 'submission_id': str | None, 'error': str | None}
+    """
+    import traceback
+    from pages.template_generator import generate_pdf_for_form
+    try:
+        sub_id = local_db.save_submission("hot_cold_exposure", data, user_id=user_id)
+        _capture_company_template_if_first(company_id, "hot_cold_exposure", data)
+        threading.Thread(target=db.sync_to_cloud, daemon=True).start()
+        pdf_path = None
+        try:
+            pdf_path = generate_pdf_for_form("hot_cold_exposure", data, employee_data=employee_data, status=status)
+        except Exception as pdf_err:
+            print(f"[hot_cold_exposure] PDF generation failed: {pdf_err}")
+            traceback.print_exc()
+        return {"success": True, "pdf_path": pdf_path, "submission_id": sub_id, "error": None}
+    except Exception as e:
+        return {"success": False, "pdf_path": None, "submission_id": None, "error": str(e)}
+
+
 class FormHotColdExposure(QWidget):
     FORM_TYPE = "hot_cold_exposure"
 
@@ -210,13 +232,11 @@ class FormHotColdExposure(QWidget):
         self.setLayout(layout)
 
     def submit_form(self, status="approved"):
-        # Gather Part B data
         partB_data = {}
         for key, checkbox in self.partB.items():
             partB_data[key] = checkbox.isChecked()
         partB_data["other_text"] = self.partB_other_text.text()
 
-        # Gather Part C data
         partC_data = {
             "hot_any_conditions": "Yes" if self.partC_hot["yes"].isChecked() else "No" if self.partC_hot["no"].isChecked() else "",
             "cold_any_conditions": "Yes" if self.partC_cold["yes"].isChecked() else "No" if self.partC_cold["no"].isChecked() else "",
@@ -224,23 +244,16 @@ class FormHotColdExposure(QWidget):
             "other_conditions_text": self.other_conditions_text.text()
         }
 
-        # Save signature
         sig_path = "temp_signature.png"
         self.signature_pad.get_signature_image().save(sig_path)
-        
         try:
             with open(sig_path, "rb") as f:
                 sig_base64 = base64.b64encode(f.read()).decode("utf-8")
-            
-            # Cleanup temp file
-            if os.path.exists(sig_path):
-                os.remove(sig_path)
-
+            if os.path.exists(sig_path): os.remove(sig_path)
         except Exception as e:
             print(f"Error encoding signature: {e}")
             sig_base64 = ""
 
-        # Prepare data
         data = {
             "employee": {
                 "first_name": self.first_name.text(),
@@ -256,41 +269,26 @@ class FormHotColdExposure(QWidget):
                 "employee_signature_date": self.signature_date.date().toString("yyyy-MM-dd"),
                 "employee_signature_data": sig_base64
             },
-            # For database searchability
             "name": self.first_name.text(),
             "surname": self.last_name.text(),
             "id_number": self.id_number.text()
         }
 
-        # Save to database
-        try:
-            user_session = self.main_window.fetch_session()
-            user_id = user_session.get("id") if user_session else None
-            
-            sub_id = local_db.save_submission("hot_cold_exposure", data, user_id=user_id)
-            print(f"Saved locally with ID: {sub_id}")
+        user_session = self.main_window.fetch_session()
+        user_id = user_session.get("id") if user_session else None
+        company = getattr(self.main_window, 'selected_company', None) or {}
+        emp_data = getattr(self.main_window, 'selected_employee', None)
 
-            company = getattr(self.main_window, 'selected_company', None) or {}
-            _capture_company_template_if_first(company.get('id', ''), self.FORM_TYPE, data)
+        result = process_submission(
+            employee_id=emp_data.get("id", "") if emp_data else "",
+            company_id=company.get("id", ""),
+            data=data, status=status, employee_data=emp_data, user_id=user_id,
+        )
+        if result["success"]:
+            status_msg = "approved" if status == "approved" else "sent for doctor approval"
+            msg = f"Form saved successfully ({status_msg})!"
+            msg += "\nPDF generated in employee folder." if result["pdf_path"] else "\n(PDF generation failed)"
+            QMessageBox.information(self, "Success", msg)
+        else:
+            QMessageBox.critical(self, "Error", f"Failed to save form: {result['error']}")
 
-            sync_thread = threading.Thread(target=db.sync_to_cloud)
-            sync_thread.start()
-            
-
-            # Generate PDF
-            try:
-                from pages.template_generator import generate_pdf_for_form
-                # Pass employee data for file organization
-                emp_data = getattr(self.main_window, 'selected_employee', None)
-                generate_pdf_for_form("hot_cold_exposure", data, employee_data=emp_data, status=status)
-                
-                status_msg = "approved" if status == "approved" else "sent for doctor approval"
-                QMessageBox.information(self, "Success", f"Form saved successfully ({status_msg})!\nPDF generated in employee folder.")
-            except Exception as pdf_error:
-                print(f"PDF generation failed: {pdf_error}")
-                import traceback
-                traceback.print_exc()
-                QMessageBox.information(self, "Success", "Form saved!\n(PDF generation failed)")
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to save form: {e}")

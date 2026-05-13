@@ -6,6 +6,32 @@ import re
 from datetime import datetime
 
 
+def get_output_root() -> str:
+    """
+    Return the root directory for all PDF outputs.
+
+    On desktop: falls back to 'outputs/' (relative to CWD) — unchanged from
+    legacy behaviour.
+
+    On Android (Phase 10): Kotlin sets HC360_OUTPUT_DIR to the path returned
+    by Context.getFilesDir() before starting the Python process.  This function
+    picks it up automatically — no other code changes needed for Android.
+    """
+    return os.environ.get("HC360_OUTPUT_DIR", "outputs")
+
+
+def get_output_path(company: str, employee: str, filename: str) -> str:
+    """
+    Build a full output path for a PDF and ensure the directory exists.
+    Android-safe: uses get_output_root() instead of a hardcoded relative path.
+    """
+    base = get_output_root()
+    path = os.path.join(base, company, employee)
+    os.makedirs(path, exist_ok=True)
+    return os.path.join(path, filename)
+
+
+
 class FileManager:
     def __init__(self, base_path: str = "outputs"):
         self.base_path = base_path

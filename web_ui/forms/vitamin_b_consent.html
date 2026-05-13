@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthCorp360 — Vitamin B12 Consent</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="offline-banner" role="alert">⚠️ Offline</div>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">HealthCorp<span class="dot">360</span></a>
+    <div class="navbar-actions"><a href="/home.html" class="btn btn-ghost btn-sm">← Dashboard</a></div>
+  </nav>
+  <main class="container page-content">
+    <div class="page-header"><h1>Vitamin B12 Injection — Informed Consent</h1></div>
+    <div id="form-alert"></div>
+    <form id="main-form" novalidate>
+      <div class="form-section">
+        <h3>Company &amp; Date</h3>
+        <div class="form-grid">
+          <div class="field"><label for="company">Company</label><input id="company" name="company" type="text"></div>
+          <div class="field"><label for="date">Date</label><input id="date" name="date" type="date"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Consent Statement</h3>
+        <div class="card" style="background:rgba(29,158,117,0.05);border-color:rgba(29,158,117,0.2)">
+          <p style="line-height:1.8;font-size:0.9rem;color:var(--text-secondary)">
+            I hereby consent to receive the Vitamin B12 injection. I acknowledge that I have had the opportunity to ask questions or request further information before proceeding.<br><br>
+            I agree that YGAM11 t/a Complete Wellbeing will not be held liable for any adverse effects or complications that may arise as a result of taking the Vitamin B12 injection.<br><br>
+            By signing below, I give my consent to receive this injection as per the above terms.
+          </p>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Patient Details</h3>
+        <div class="form-grid">
+          <div class="field"><label for="name_surname">Name &amp; Surname</label><input id="name_surname" name="name_surname" type="text"></div>
+          <div class="field"><label for="id_number">ID Number</label><input id="id_number" name="id_number" type="text"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Patient Signature</h3>
+        <div class="signature-wrapper"><canvas id="sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-sig">Clear</button></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="approve-btn"><span class="spinner"></span><span class="btn-label">✅ Approve</span></button>
+        <button type="button" class="btn btn-secondary" id="pending-btn">⏳ Needs Doctor Approval</button>
+      </div>
+    </form>
+    <div id="success-panel" class="hidden mt-2">
+      <div class="alert alert-success" id="success-msg"></div>
+      <a id="view-pdf-btn" href="#" target="_blank" class="btn btn-secondary btn-sm mt-1">📄 View PDF</a>
+    </div>
+  </main>
+  <script src="/static/app.js"></script><script src="/static/signature.js"></script>
+  <script>
+    const FORM_TYPE = 'vitamin_b_consent';
+    const CONSENT_TEXT = 'I hereby consent to receive the Vitamin B12 injection. I acknowledge that I have had the opportunity to ask questions or request further information before proceeding.\n\nI agree that YGAM11 t/a Complete Wellbeing will not be held liable for any adverse effects or complications that may arise as a result of taking the Vitamin B12 injection.\n\nBy signing below, I give my consent to receive this injection as per the above terms.';
+    let sigPad;
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!redirectIfNoSession()) return;
+      sigPad = initSignaturePad('sig-canvas');
+      document.getElementById('clear-sig').onclick = () => sigPad.clear();
+      document.getElementById('date').value = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
+      const co = getSelectedCompany(), emp = getSelectedEmployee();
+      if (co && emp) { try { const {autofill} = await apiFetch(`/forms/${FORM_TYPE}/autofill?company_id=${co.id}&employee_id=${emp.id}`); applyAutofill(document.getElementById('main-form'), autofill); } catch(e){} }
+      document.getElementById('pending-btn').onclick = () => submitForm('pending');
+    });
+    document.getElementById('main-form').onsubmit = e => { e.preventDefault(); submitForm('approved'); };
+    async function submitForm(status) {
+      const btn = document.getElementById(status==='approved'?'approve-btn':'pending-btn');
+      setButtonLoading(btn, true);
+      const f = document.getElementById('main-form');
+      const nameSurname = f.elements['name_surname'].value;
+      const sigData = sigPad ? sigPad.toBase64() : '';
+      const data = {
+        date: f.elements['date'].value,
+        company: f.elements['company'].value,
+        consent_text: CONSENT_TEXT,
+        entries: [{no:1, name_surname: nameSurname, id_number: f.elements['id_number'].value, signature_text: nameSurname, signature_img: sigData}],
+        name: nameSurname.split(' ')[0]||'',
+        surname: nameSurname.split(' ').slice(1).join(' ')||'',
+        id_number: f.elements['id_number'].value,
+        patient_name: nameSurname,
+        signature_data: sigData,
+        signature_date: f.elements['date'].value,
+      };
+      const co = getSelectedCompany()||{}, emp = getSelectedEmployee()||{};
+      try {
+        const r = await apiFetch(`/forms/${FORM_TYPE}/submit`,{method:'POST',body:JSON.stringify({employee_id:emp.id||'',company_id:co.id||'',data,status,employee_data:emp,user_id:(getSession()||{}).id||null})});
+        document.getElementById('success-msg').textContent = `✅ Consent saved (${status})! ID: ${r.submission_id||'—'}`;
+        if(r.pdf_path) document.getElementById('view-pdf-btn').href=`/documents/pdf?path=${encodeURIComponent(r.pdf_path)}`;
+        document.getElementById('success-panel').classList.remove('hidden');
+        f.reset(); sigPad&&sigPad.clear();
+      } catch(err) { showAlert(document.getElementById('form-alert'),'error',err.message); }
+      finally { setButtonLoading(btn,false); }
+    }
+  </script>
+</body>
+</html>

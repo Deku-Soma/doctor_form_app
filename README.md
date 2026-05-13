@@ -4,6 +4,25 @@
 
 ---
 
+## ⚠️ Platform Strategy — Phase 1 Spike Decision (READ BEFORE PHASE 10)
+
+| Item | Status |
+|------|--------|
+| **Phase 1 spike (WeasyPrint on ARM Android)** | **DEFERRED — no Android hardware available** |
+| **Assumed PDF path** | **Path B1 — Server-side PDF via Supabase Edge Function** |
+| **Desktop PDF engine** | WeasyPrint + Jinja2 — **unchanged, continues to work** |
+
+**Path B1 means:** on Android, form data will be POSTed to a Supabase Edge Function (Deno) that runs the WeasyPrint pipeline server-side and returns a signed PDF URL. The Python PDF stack on the desktop is unaffected.
+
+> [!CAUTION]
+> **This assumption MUST be validated on a physical ARM tablet before Phase 10 (Android Packaging) begins.**
+> Run: `from weasyprint import HTML; HTML(string='<h1>Test</h1>').write_pdf('/data/test.pdf')` inside a Chaquopy APK.
+> If it succeeds → switch to Path A (no changes needed). If it fails (likely) → Path B1 applies.
+
+*Decision recorded: 2026-05-09. Revisit at Phase 10.*
+
+---
+
 ## Quick Start
 
 ### Prerequisites

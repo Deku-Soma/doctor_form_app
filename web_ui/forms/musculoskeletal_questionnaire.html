@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthCorp360 — Musculoskeletal Questionnaire</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .msk-table{width:100%;border-collapse:collapse;font-size:var(--font-sm)}
+    .msk-table th,.msk-table td{padding:8px 10px;border:1px solid var(--border);text-align:center}
+    .msk-table th{background:rgba(29,158,117,0.08);font-weight:600}
+    .msk-table td:first-child{text-align:left;font-weight:500}
+    .msk-table select{min-height:36px;font-size:var(--font-sm)}
+  </style>
+</head>
+<body>
+  <div id="offline-banner" role="alert">⚠️ Offline</div>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">HealthCorp<span class="dot">360</span></a>
+    <div class="navbar-actions"><a href="/home.html" class="btn btn-ghost btn-sm">← Dashboard</a></div>
+  </nav>
+  <main class="container page-content">
+    <div class="page-header"><h1>Musculoskeletal Questionnaire</h1><p>Mark Yes/No for each body part and symptom experienced in the last 12 months.</p></div>
+    <div id="form-alert"></div>
+    <form id="main-form" novalidate>
+      <div class="form-section">
+        <h3>Employee Details</h3>
+        <div class="form-grid">
+          <div class="field"><label for="full_name">Name &amp; Surname</label><input id="full_name" name="full_name" type="text"></div>
+          <div class="field"><label for="id_number">ID Number</label><input id="id_number" name="id_number" type="text"></div>
+          <div class="field"><label for="occupation">Occupation</label><input id="occupation" name="occupation" type="text"></div>
+          <div class="field"><label for="department">Department</label><input id="department" name="department" type="text"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Symptom Grid — last 12 months</h3>
+        <div style="overflow-x:auto">
+          <table class="msk-table" id="msk-grid">
+            <thead><tr><th>Body Part</th><th>Pain</th><th>Aches</th><th>Discomfort</th><th>Numbness</th><th>Stiffness</th><th>Swelling</th></tr></thead>
+            <tbody id="msk-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Comments</h3>
+        <div class="field"><textarea id="comments" name="comments" rows="3"></textarea></div>
+      </div>
+      <div class="form-section">
+        <h3>Employee Declaration</h3>
+        <div class="field"><label for="employee_date">Date</label><input id="employee_date" name="employee_date" type="date"></div>
+        <p class="text-muted" style="margin-bottom:8px">Employee Signature</p>
+        <div class="signature-wrapper"><canvas id="emp-sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-emp">Clear</button></div>
+      </div>
+      <div class="form-section">
+        <h3>OHNP Declaration</h3>
+        <div class="field"><label for="ohnp_date">Date</label><input id="ohnp_date" name="ohnp_date" type="date"></div>
+        <p class="text-muted" style="margin-bottom:8px">OHNP Signature</p>
+        <div class="signature-wrapper"><canvas id="ohnp-sig-canvas"></canvas></div>
+        <div class="signature-controls"><button type="button" class="btn btn-ghost btn-sm" id="clear-ohnp">Clear</button></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="approve-btn"><span class="spinner"></span><span class="btn-label">✅ Approve</span></button>
+        <button type="button" class="btn btn-secondary" id="pending-btn">⏳ Needs Doctor Approval</button>
+      </div>
+    </form>
+    <div id="success-panel" class="hidden mt-2">
+      <div class="alert alert-success" id="success-msg"></div>
+      <a id="view-pdf-btn" href="#" target="_blank" class="btn btn-secondary btn-sm mt-1">📄 View PDF</a>
+    </div>
+  </main>
+  <script src="/static/app.js"></script><script src="/static/signature.js"></script>
+  <script>
+    const FORM_TYPE = 'musculoskeletal_questionnaire';
+    const BODY_PARTS = ['Neck','Shoulder','Upper body','Elbows','Wrist/hands','Lower body','Hips/thighs','Knees','Ankles','Feet'];
+    const SYMPTOMS   = ['pain','aches','discomfort','numbness','stiffness','swelling'];
+    let empSig, ohnpSig;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!redirectIfNoSession()) return;
+      empSig  = initSignaturePad('emp-sig-canvas');
+      ohnpSig = initSignaturePad('ohnp-sig-canvas');
+      document.getElementById('clear-emp').onclick  = () => empSig.clear();
+      document.getElementById('clear-ohnp').onclick = () => ohnpSig.clear();
+      const today = new Date().toISOString().slice(0,10);
+      document.getElementById('employee_date').value = today;
+      document.getElementById('ohnp_date').value     = today;
+
+      // Build grid
+      const tbody = document.getElementById('msk-tbody');
+      BODY_PARTS.forEach(part => {
+        const key = part.toLowerCase().replace(/\//g,'_').replace(/ /g,'_');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${part}</td>` + SYMPTOMS.map(s =>
+          `<td><select name="grid_${key}_${s}"><option value="">—</option><option>Yes</option><option>No</option></select></td>`
+        ).join('');
+        tbody.appendChild(tr);
+      });
+
+      const co = getSelectedCompany(), emp = getSelectedEmployee();
+      if (co && emp) { try { const {autofill} = await apiFetch(`/forms/${FORM_TYPE}/autofill?company_id=${co.id}&employee_id=${emp.id}`); applyAutofill(document.getElementById('main-form'), autofill); } catch(e){} }
+      document.getElementById('pending-btn').onclick = () => submitForm('pending');
+    });
+    document.getElementById('main-form').onsubmit = e => { e.preventDefault(); submitForm('approved'); };
+
+    async function submitForm(status) {
+      const btn = document.getElementById(status==='approved'?'approve-btn':'pending-btn');
+      setButtonLoading(btn, true);
+      const f = document.getElementById('main-form');
+      const grid = {};
+      BODY_PARTS.forEach(part => {
+        const key = part.toLowerCase().replace(/\//g,'_').replace(/ /g,'_');
+        grid[key] = {};
+        SYMPTOMS.forEach(s => { grid[key][s] = f.elements[`grid_${key}_${s}`]?.value||''; });
+      });
+      const data = {
+        full_name: f.elements['full_name'].value,
+        id_number: f.elements['id_number'].value,
+        occupation: f.elements['occupation'].value,
+        department: f.elements['department'].value,
+        grid,
+        comments: f.elements['comments'].value,
+        employee_date: f.elements['employee_date'].value,
+        ohnp_date: f.elements['ohnp_date'].value,
+        employee_signature: empSig ? empSig.toBase64() : '',
+        ohnp_signature: ohnpSig ? ohnpSig.toBase64() : '',
+      };
+      const co = getSelectedCompany()||{}, emp = getSelectedEmployee()||{};
+      try {
+        const r = await apiFetch(`/forms/${FORM_TYPE}/submit`,{method:'POST',body:JSON.stringify({employee_id:emp.id||'',company_id:co.id||'',data,status,employee_data:emp,user_id:(getSession()||{}).id||null})});
+        document.getElementById('success-msg').textContent = `✅ Saved (${status})! ID: ${r.submission_id||'—'}`;
+        if(r.pdf_path) document.getElementById('view-pdf-btn').href=`/documents/pdf?path=${encodeURIComponent(r.pdf_path)}`;
+        document.getElementById('success-panel').classList.remove('hidden');
+      } catch(err) { showAlert(document.getElementById('form-alert'),'error',err.message); }
+      finally { setButtonLoading(btn,false); }
+    }
+  </script>
+</body>
+</html>
