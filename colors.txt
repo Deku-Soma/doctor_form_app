@@ -1,6 +1,0 @@
-Top 5 colors found:
-RGB: (255, 255, 255) - Hex: #ffffff - Count: 97
-RGB: (29, 1, 24) - Hex: #1d0118 - Count: 12
-RGB: (29, 1, 23) - Hex: #1d0117 - Count: 7
-RGB: (104, 80, 112) - Hex: #685070 - Count: 6
-RGB: (22, 59, 77) - Hex: #163b4d - Count: 6
